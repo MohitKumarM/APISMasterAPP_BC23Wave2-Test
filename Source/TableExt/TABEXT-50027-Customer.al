@@ -40,13 +40,13 @@ tableextension 50027 Customer extends Customer
             trigger OnValidate()
             var
                 Rec_Customer: Record Customer;
-            begin
+            begin/* in
                 Rec_Customer.SetFilter("Parent Group", '<>%1', '');
                 if Rec_Customer.FindSet() then
                     repeat
                         if Rec_Customer."Parent Group" = Rec."No." then
                             Error('You Cannot Select Because he is already define  Parent Customer');
-                    until Rec_Customer.Next() = 0;
+                    until Rec_Customer.Next() = 0; */
             end;
         }
         field(80005; "Child Group"; Code[20])

@@ -43,7 +43,46 @@ page 50046 "Customer Groups"
         }
         area(Factboxes)
         {
+
         }
+    }
+    actions
+    {
+        area(Processing)
+        {
+
+            action("Ledger E&ntries")
+            {
+                ApplicationArea = Basic, Suite;
+                Promoted = true;
+                Caption = 'Ledger E&ntries';
+                Enabled = LedgerEntries;
+                Image = CustomerLedger;
+                RunObject = Page "Customer Ledger Entries";
+                RunPageLink = "Customer No." = field(Code);
+                RunPageView = sorting("Customer No.")
+                                  order(Descending);
+                ShortCutKey = 'Ctrl+F7';
+                ToolTip = 'View the history of transactions that have been posted for the selected record.';
+            }
+            action("Parent Ledger E&ntries")
+            {
+                ApplicationArea = Basic, Suite;
+                Promoted = true;
+                Enabled = ParentLedgerEntries;
+                Caption = 'Parent Ledger E&ntries';
+                Image = CustomerLedger;
+                RunObject = Page "Customer Ledger Entries";
+                RunPageLink = "Parent Group" = field("Parent Group");
+                RunPageView = sorting("Customer No.")
+                                  order(Descending);
+                ShortCutKey = 'Ctrl+F7';
+                ToolTip = 'View the history of transactions that have been posted for the selected record.';
+
+
+            }
+        }
+
     }
 
     var
@@ -58,9 +97,12 @@ page 50046 "Customer Groups"
         EntryNo: Integer;
         StyleExperssion: Boolean;
         L_CustomerGrpMaster: Record "Customer Group Master";
+        ParentLedgerEntries: Boolean;
+        LedgerEntries: Boolean;
 
     trigger OnAfterGetRecord()
     begin
+
         ParentGroup := rec."Parent Group";
         Indenation := rec.Indentation;
         No := rec.Code;
@@ -69,9 +111,13 @@ page 50046 "Customer Groups"
         if rec.Indentation = 0 then begin
             IndentationHideValue := false;
             StyleExperssion := true;
+            ParentLedgerEntries := true;
+            LedgerEntries := false;
         end else begin
             IndentationHideValue := true;
             StyleExperssion := false;
+            ParentLedgerEntries := false;
+            LedgerEntries := true;
         end;
     end;
 
@@ -120,6 +166,7 @@ page 50046 "Customer Groups"
                 EntryNo := EntryNo + 1
             else
                 EntryNo := 1;
+            //if Rec_Customer."Parent Group" <> Rec_Customer."No." then begin
             Rec.Init();
             rec."Entry No." := EntryNo;
             Rec.Code := Rec_Customer."No.";
@@ -130,6 +177,7 @@ page 50046 "Customer Groups"
             i := 1;
             rec.Insert();
             PrenGrp := Rec_Customer."Parent Group";
+        //end;
         until Rec_Customer.Next() = 0;
     end;
 
