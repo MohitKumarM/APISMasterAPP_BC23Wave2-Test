@@ -11,127 +11,6 @@
       <rd:DataSourceID>f4cfa4f1-fe58-4d1f-a467-acc458c2ee04</rd:DataSourceID>
     </DataSource>
   </DataSources>
-  <DataSets>
-    <DataSet Name="DataSet_Result">
-      <Query>
-        <DataSourceName>DataSource</DataSourceName>
-        <CommandText />
-      </Query>
-      <Fields>
-        <Field Name="SrNoLbl">
-          <DataField>SrNoLbl</DataField>
-        </Field>
-        <Field Name="DealRateLbl">
-          <DataField>DealRateLbl</DataField>
-        </Field>
-        <Field Name="DealQtyLbl">
-          <DataField>DealQtyLbl</DataField>
-        </Field>
-        <Field Name="CurrentStausLbl">
-          <DataField>CurrentStausLbl</DataField>
-        </Field>
-        <Field Name="BalNetWtLbl">
-          <DataField>BalNetWtLbl</DataField>
-        </Field>
-        <Field Name="BalQtyLbl">
-          <DataField>BalQtyLbl</DataField>
-        </Field>
-        <Field Name="DateLbl">
-          <DataField>DateLbl</DataField>
-        </Field>
-        <Field Name="DealFloralbl">
-          <DataField>DealFloralbl</DataField>
-        </Field>
-        <Field Name="DealNoLbl">
-          <DataField>DealNoLbl</DataField>
-        </Field>
-        <Field Name="DealNetWtlbl">
-          <DataField>DealNetWtlbl</DataField>
-        </Field>
-        <Field Name="RecQtyLbl">
-          <DataField>RecQtyLbl</DataField>
-        </Field>
-        <Field Name="RecNetWtLbl">
-          <DataField>RecNetWtLbl</DataField>
-        </Field>
-        <Field Name="SupplierLbl">
-          <DataField>SupplierLbl</DataField>
-        </Field>
-        <Field Name="Date_DealMaster">
-          <DataField>Date_DealMaster</DataField>
-        </Field>
-        <Field Name="DealQty_DealMaster">
-          <DataField>DealQty_DealMaster</DataField>
-        </Field>
-        <Field Name="DealQty_DealMasterFormat">
-          <DataField>DealQty_DealMasterFormat</DataField>
-        </Field>
-        <Field Name="DispatchedQty_DealMaster">
-          <DataField>DispatchedQty_DealMaster</DataField>
-        </Field>
-        <Field Name="DispatchedQty_DealMasterFormat">
-          <DataField>DispatchedQty_DealMasterFormat</DataField>
-        </Field>
-        <Field Name="DispatchedQtyKg_DealMaster">
-          <DataField>DispatchedQtyKg_DealMaster</DataField>
-        </Field>
-        <Field Name="DispatchedQtyKg_DealMasterFormat">
-          <DataField>DispatchedQtyKg_DealMasterFormat</DataField>
-        </Field>
-        <Field Name="Flora_DealMaster">
-          <DataField>Flora_DealMaster</DataField>
-        </Field>
-        <Field Name="PerUnitQtyKg_DealMaster">
-          <DataField>PerUnitQtyKg_DealMaster</DataField>
-        </Field>
-        <Field Name="PerUnitQtyKg_DealMasterFormat">
-          <DataField>PerUnitQtyKg_DealMasterFormat</DataField>
-        </Field>
-        <Field Name="PurchaserName_DealMaster">
-          <DataField>PurchaserName_DealMaster</DataField>
-        </Field>
-        <Field Name="Status_DealMaster">
-          <DataField>Status_DealMaster</DataField>
-        </Field>
-        <Field Name="SrNo">
-          <DataField>SrNo</DataField>
-        </Field>
-        <Field Name="UnitRateinKg_DealMaster">
-          <DataField>UnitRateinKg_DealMaster</DataField>
-        </Field>
-        <Field Name="UnitRateinKg_DealMasterFormat">
-          <DataField>UnitRateinKg_DealMasterFormat</DataField>
-        </Field>
-        <Field Name="No_">
-          <DataField>No_</DataField>
-        </Field>
-        <Field Name="Deal_Qty_">
-          <DataField>Deal_Qty_</DataField>
-        </Field>
-        <Field Name="Deal_Qty_Format">
-          <DataField>Deal_Qty_Format</DataField>
-        </Field>
-        <Field Name="ReamainigQty">
-          <DataField>ReamainigQty</DataField>
-        </Field>
-        <Field Name="ReamainigQtyFormat">
-          <DataField>ReamainigQtyFormat</DataField>
-        </Field>
-        <Field Name="DealNetWt">
-          <DataField>DealNetWt</DataField>
-        </Field>
-        <Field Name="DealNetWtFormat">
-          <DataField>DealNetWtFormat</DataField>
-        </Field>
-        <Field Name="BalanceNetWt">
-          <DataField>BalanceNetWt</DataField>
-        </Field>
-        <Field Name="BalanceNetWtFormat">
-          <DataField>BalanceNetWtFormat</DataField>
-        </Field>
-      </Fields>
-    </DataSet>
-  </DataSets>
   <ReportSections>
     <ReportSection>
       <Body>
@@ -1507,12 +1386,6 @@
       </Page>
     </ReportSection>
   </ReportSections>
-  <ReportParametersLayout>
-    <GridLayoutDefinition>
-      <NumberOfColumns>4</NumberOfColumns>
-      <NumberOfRows>2</NumberOfRows>
-    </GridLayoutDefinition>
-  </ReportParametersLayout>
   <Code>Public Function BlankZero(ByVal Value As Decimal)
     if Value = 0 then
         Return ""
@@ -1552,4 +1425,125 @@ End Function
   <ConsumeContainerWhitespace>true</ConsumeContainerWhitespace>
   <rd:ReportUnitType>Inch</rd:ReportUnitType>
   <rd:ReportID>0eeb6585-38ae-40f1-885b-8d50088d51b4</rd:ReportID>
-</Report>e
+  <DataSets>
+    <DataSet Name="DataSet_Result">
+      <Fields>
+        <Field Name="SrNoLbl">
+          <DataField>SrNoLbl</DataField>
+        </Field>
+        <Field Name="DealRateLbl">
+          <DataField>DealRateLbl</DataField>
+        </Field>
+        <Field Name="DealQtyLbl">
+          <DataField>DealQtyLbl</DataField>
+        </Field>
+        <Field Name="CurrentStausLbl">
+          <DataField>CurrentStausLbl</DataField>
+        </Field>
+        <Field Name="BalNetWtLbl">
+          <DataField>BalNetWtLbl</DataField>
+        </Field>
+        <Field Name="BalQtyLbl">
+          <DataField>BalQtyLbl</DataField>
+        </Field>
+        <Field Name="DateLbl">
+          <DataField>DateLbl</DataField>
+        </Field>
+        <Field Name="DealFloralbl">
+          <DataField>DealFloralbl</DataField>
+        </Field>
+        <Field Name="DealNoLbl">
+          <DataField>DealNoLbl</DataField>
+        </Field>
+        <Field Name="DealNetWtlbl">
+          <DataField>DealNetWtlbl</DataField>
+        </Field>
+        <Field Name="RecQtyLbl">
+          <DataField>RecQtyLbl</DataField>
+        </Field>
+        <Field Name="RecNetWtLbl">
+          <DataField>RecNetWtLbl</DataField>
+        </Field>
+        <Field Name="SupplierLbl">
+          <DataField>SupplierLbl</DataField>
+        </Field>
+        <Field Name="Date_DealMaster">
+          <DataField>Date_DealMaster</DataField>
+        </Field>
+        <Field Name="DealQty_DealMaster">
+          <DataField>DealQty_DealMaster</DataField>
+        </Field>
+        <Field Name="DealQty_DealMasterFormat">
+          <DataField>DealQty_DealMasterFormat</DataField>
+        </Field>
+        <Field Name="DispatchedQty_DealMaster">
+          <DataField>DispatchedQty_DealMaster</DataField>
+        </Field>
+        <Field Name="DispatchedQty_DealMasterFormat">
+          <DataField>DispatchedQty_DealMasterFormat</DataField>
+        </Field>
+        <Field Name="DispatchedQtyKg_DealMaster">
+          <DataField>DispatchedQtyKg_DealMaster</DataField>
+        </Field>
+        <Field Name="DispatchedQtyKg_DealMasterFormat">
+          <DataField>DispatchedQtyKg_DealMasterFormat</DataField>
+        </Field>
+        <Field Name="Flora_DealMaster">
+          <DataField>Flora_DealMaster</DataField>
+        </Field>
+        <Field Name="PerUnitQtyKg_DealMaster">
+          <DataField>PerUnitQtyKg_DealMaster</DataField>
+        </Field>
+        <Field Name="PerUnitQtyKg_DealMasterFormat">
+          <DataField>PerUnitQtyKg_DealMasterFormat</DataField>
+        </Field>
+        <Field Name="PurchaserName_DealMaster">
+          <DataField>PurchaserName_DealMaster</DataField>
+        </Field>
+        <Field Name="Status_DealMaster">
+          <DataField>Status_DealMaster</DataField>
+        </Field>
+        <Field Name="SrNo">
+          <DataField>SrNo</DataField>
+        </Field>
+        <Field Name="UnitRateinKg_DealMaster">
+          <DataField>UnitRateinKg_DealMaster</DataField>
+        </Field>
+        <Field Name="UnitRateinKg_DealMasterFormat">
+          <DataField>UnitRateinKg_DealMasterFormat</DataField>
+        </Field>
+        <Field Name="No_">
+          <DataField>No_</DataField>
+        </Field>
+        <Field Name="Deal_Qty_">
+          <DataField>Deal_Qty_</DataField>
+        </Field>
+        <Field Name="Deal_Qty_Format">
+          <DataField>Deal_Qty_Format</DataField>
+        </Field>
+        <Field Name="ReamainigQty">
+          <DataField>ReamainigQty</DataField>
+        </Field>
+        <Field Name="ReamainigQtyFormat">
+          <DataField>ReamainigQtyFormat</DataField>
+        </Field>
+        <Field Name="DealNetWt">
+          <DataField>DealNetWt</DataField>
+        </Field>
+        <Field Name="DealNetWtFormat">
+          <DataField>DealNetWtFormat</DataField>
+        </Field>
+        <Field Name="BalanceNetWt">
+          <DataField>BalanceNetWt</DataField>
+        </Field>
+        <Field Name="BalanceNetWtFormat">
+          <DataField>BalanceNetWtFormat</DataField>
+        </Field>
+      </Fields>
+      <Query>
+        <DataSourceName>DataSource</DataSourceName>
+        <CommandText />
+      </Query>
+    </DataSet>
+  </DataSets>
+</Report>

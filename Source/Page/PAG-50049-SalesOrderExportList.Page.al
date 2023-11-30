@@ -297,7 +297,7 @@ page 50049 "Sales Order Export List"
                     ToolTip = 'Specifies the customer''s reference. The content will be printed on sales documents.';
                     Visible = false;
                 }
-                field("Coupled to CRM"; Rec."Coupled to CRM")
+                field("Coupled to CRM"; Rec."Coupled to Dataverse")
                 {
                     ApplicationArea = All;
                     ToolTip = 'Specifies that the sales order is coupled to an order in Dynamics 365 Sales.';

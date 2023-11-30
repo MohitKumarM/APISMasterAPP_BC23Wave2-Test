@@ -282,7 +282,7 @@ page 50051 "Posted Sales Invoices Export"
                         DocExchServDocStatus.DocExchStatusDrillDown(Rec);
                     end;
                 }
-                field("<Document Exchange Status>"; Rec."Coupled to CRM")
+                field("<Document Exchange Status>"; Rec."Coupled to Dataverse")
                 {
                     ApplicationArea = All;
                     ToolTip = 'Specifies that the posted sales order is coupled to a sales order in Dynamics 365 Sales.';
