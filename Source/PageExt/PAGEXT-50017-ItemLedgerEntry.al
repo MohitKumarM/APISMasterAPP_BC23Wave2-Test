@@ -57,6 +57,10 @@ pageextension 50017 ItemLedgerEntry extends "Item Ledger Entries"
                 ApplicationArea = All;
                 ToolTip = 'Specifies the value of the Purchaser Name field.';
             }
+            field("Tare Weight"; Rec."Tare Weight")
+            {
+                ApplicationArea = all;
+            }
             field(Flora; Rec.Flora)
             {
                 ApplicationArea = All;

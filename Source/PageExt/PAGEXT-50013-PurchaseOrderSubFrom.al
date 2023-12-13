@@ -161,7 +161,6 @@ pageextension 50013 PurchaOrderSubform extends "Purchase Order Subform"
                 end;
             }
         }
-
     }
 
     procedure UpdateTaxAmount()

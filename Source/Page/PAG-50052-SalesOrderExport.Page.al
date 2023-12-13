@@ -294,6 +294,43 @@ page 50052 "Sales Order Export"
                         SalespersonCodeOnAfterValidate();
                     end;
                 }
+
+                field(NSM; Rec.NSM)
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the value of the NSM field.';
+                }
+                field(ZSM; Rec.ZSM)
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the value of the ZSM field.';
+                }
+                field(RSM; Rec.RSM)
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the value of the RSM field.';
+                }
+                field(ASM; Rec.ASM)
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the value of the ASM field.';
+                }
+                field(TSM; Rec.TSM)
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the value of the TSM field.';
+                }
+                field(SO; Rec.SO)
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the value of the SO field.';
+                }
+                field("APIS_Transaction Type"; Rec."APIS_Transaction Type")
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the value of the Transaction Type field.';
+                }
+
                 field("Campaign No."; Rec."Campaign No.")
                 {
                     ApplicationArea = RelationshipMgmt;
@@ -2394,125 +2431,67 @@ page 50052 "Sales Order Export"
                     Caption = 'Posting', Comment = 'Generated from the PromotedActionCategories property index 5.';
                     ShowAs = SplitButton;
 
-                    actionref(Post_Promoted; Post)
-                    {
-                    }
-                    actionref(PostAndSend_Promoted; PostAndSend)
-                    {
-                    }
-                    actionref(PreviewPosting_Promoted; PreviewPosting)
-                    {
-                    }
-                    actionref(PostAndNew_Promoted; PostAndNew)
-                    {
-                    }
+                    actionref(Post_Promoted; Post) { }
+                    actionref(PostAndSend_Promoted; PostAndSend) { }
+                    actionref(PreviewPosting_Promoted; PreviewPosting) { }
+                    actionref(PostAndNew_Promoted; PostAndNew) { }
                 }
                 group(Category_Category5)
                 {
                     Caption = 'Release', Comment = 'Generated from the PromotedActionCategories property index 4.';
                     ShowAs = SplitButton;
 
-                    actionref(Release_Promoted; Release)
-                    {
-                    }
-                    actionref(Reopen_Promoted; Reopen)
-                    {
-                    }
+                    actionref(Release_Promoted; Release) { }
+                    actionref(Reopen_Promoted; Reopen) { }
                 }
-                actionref("Create &Warehouse Shipment_Promoted"; "Create &Warehouse Shipment")
-                {
-                }
-                actionref("Create Inventor&y Put-away/Pick_Promoted"; "Create Inventor&y Put-away/Pick")
-                {
-                }
-                actionref("Archive Document_Promoted"; "Archive Document")
-                {
-                }
+                actionref("Create &Warehouse Shipment_Promoted"; "Create &Warehouse Shipment") { }
+                actionref("Create Inventor&y Put-away/Pick_Promoted"; "Create Inventor&y Put-away/Pick") { }
+                actionref("Archive Document_Promoted"; "Archive Document") { }
             }
             group(Category_Category7)
             {
                 Caption = 'Prepare', Comment = 'Generated from the PromotedActionCategories property index 6.';
 
-                actionref(CopyDocument_Promoted; CopyDocument)
-                {
-                }
-                actionref(GetRecurringSalesLines_Promoted; GetRecurringSalesLines)
-                {
-                }
+                actionref(CopyDocument_Promoted; CopyDocument) { }
+                actionref(GetRecurringSalesLines_Promoted; GetRecurringSalesLines) { }
                 group("Category_Incoming Document")
                 {
                     Caption = 'Incoming Document';
 
-                    actionref(IncomingDocAttachFile_Promoted; IncomingDocAttachFile)
-                    {
-                    }
-                    actionref(IncomingDocCard_Promoted; IncomingDocCard)
-                    {
-                    }
-                    actionref(SelectIncomingDoc_Promoted; SelectIncomingDoc)
-                    {
-                    }
-                    actionref(RemoveIncomingDoc_Promoted; RemoveIncomingDoc)
-                    {
-                    }
+                    actionref(IncomingDocAttachFile_Promoted; IncomingDocAttachFile) { }
+                    actionref(IncomingDocCard_Promoted; IncomingDocCard) { }
+                    actionref(SelectIncomingDoc_Promoted; SelectIncomingDoc) { }
+                    actionref(RemoveIncomingDoc_Promoted; RemoveIncomingDoc) { }
                 }
-                actionref(CalculateInvoiceDiscount_Promoted; CalculateInvoiceDiscount)
-                {
-                }
-                actionref(MoveNegativeLines_Promoted; MoveNegativeLines)
-                {
-                }
+                actionref(CalculateInvoiceDiscount_Promoted; CalculateInvoiceDiscount) { }
+                actionref(MoveNegativeLines_Promoted; MoveNegativeLines) { }
             }
             group(Category_Category4)
             {
                 Caption = 'Approve', Comment = 'Generated from the PromotedActionCategories property index 3.';
 
-                actionref(Approve_Promoted; Approve)
-                {
-                }
-                actionref(Reject_Promoted; Reject)
-                {
-                }
-                actionref(Comment_Promoted; Comment)
-                {
-                }
-                actionref(Delegate_Promoted; Delegate)
-                {
-                }
+                actionref(Approve_Promoted; Approve) { }
+                actionref(Reject_Promoted; Reject) { }
+                actionref(Comment_Promoted; Comment) { }
+                actionref(Delegate_Promoted; Delegate) { }
             }
             group(Category_Category11)
             {
                 Caption = 'Print/Send', Comment = 'Generated from the PromotedActionCategories property index 10.';
 
-                actionref(SendEmailConfirmation_Promoted; SendEmailConfirmation)
-                {
-                }
-                actionref("Print Confirmation_Promoted"; "Print Confirmation")
-                {
-                }
-                actionref("Pick Instruction_Promoted"; "Pick Instruction")
-                {
-                }
-                actionref(AttachAsPDF_Promoted; AttachAsPDF)
-                {
-                }
-                actionref("Work Order_Promoted"; "Work Order")
-                {
-                }
-                actionref(ProformaInvoice_Promoted; ProformaInvoice)
-                {
-                }
+                actionref(SendEmailConfirmation_Promoted; SendEmailConfirmation) { }
+                actionref("Print Confirmation_Promoted"; "Print Confirmation") { }
+                actionref("Pick Instruction_Promoted"; "Pick Instruction") { }
+                actionref(AttachAsPDF_Promoted; AttachAsPDF) { }
+                actionref("Work Order_Promoted"; "Work Order") { }
+                actionref(ProformaInvoice_Promoted; ProformaInvoice) { }
             }
             group(Category_Category9)
             {
                 Caption = 'Request Approval', Comment = 'Generated from the PromotedActionCategories property index 8.';
 
-                actionref(SendApprovalRequest_Promoted; SendApprovalRequest)
-                {
-                }
-                actionref(CancelApprovalRequest_Promoted; CancelApprovalRequest)
-                {
-                }
+                actionref(SendApprovalRequest_Promoted; SendApprovalRequest) { }
+                actionref(CancelApprovalRequest_Promoted; CancelApprovalRequest) { }
                 /* #if not CLEAN21
                                 actionref(CreateFlow_Promoted; CreateFlow)
                                 {
@@ -2537,33 +2516,15 @@ page 50052 "Sales Order Export"
             {
                 Caption = 'Order', Comment = 'Generated from the PromotedActionCategories property index 7.';
 
-                actionref(Dimensions_Promoted; Dimensions)
-                {
-                }
-                actionref(Statistics_Promoted; Statistics)
-                {
-                }
-                actionref("Co&mments_Promoted"; "Co&mments")
-                {
-                }
-                actionref(DocAttach_Promoted; DocAttach)
-                {
-                }
-                actionref(Approvals_Promoted; Approvals)
-                {
-                }
-                separator(Navigate_Separator)
-                {
-                }
-                actionref(Invoices_Promoted; Invoices)
-                {
-                }
-                actionref(Customer_Promoted; Customer)
-                {
-                }
-                actionref("S&hipments_Promoted"; "S&hipments")
-                {
-                }
+                actionref(Dimensions_Promoted; Dimensions) { }
+                actionref(Statistics_Promoted; Statistics) { }
+                actionref("Co&mments_Promoted"; "Co&mments") { }
+                actionref(DocAttach_Promoted; DocAttach) { }
+                actionref(Approvals_Promoted; Approvals) { }
+                separator(Navigate_Separator) { }
+                actionref(Invoices_Promoted; Invoices) { }
+                actionref(Customer_Promoted; Customer) { }
+                actionref("S&hipments_Promoted"; "S&hipments") { }
             }
             group(Category_Category10)
             {
@@ -2582,27 +2543,17 @@ page 50052 "Sales Order Export"
                 Caption = 'Synchronize';
                 Visible = CRMIntegrationEnabled;
 
-                actionref(CRMGoToSalesOrder_Promoted; CRMGoToSalesOrder)
-                {
-                }
+                actionref(CRMGoToSalesOrder_Promoted; CRMGoToSalesOrder) { }
                 group(Category_Coupling)
                 {
                     Caption = 'Coupling';
                     ShowAs = SplitButton;
 
-                    actionref(ManageCRMCoupling_Promoted; ManageCRMCoupling)
-                    {
-                    }
-                    actionref(DeleteCRMCoupling_Promoted; DeleteCRMCoupling)
-                    {
-                    }
+                    actionref(ManageCRMCoupling_Promoted; ManageCRMCoupling) { }
+                    actionref(DeleteCRMCoupling_Promoted; DeleteCRMCoupling) { }
                 }
-                actionref(ShowLog_Promoted; ShowLog)
-                {
-                }
-                actionref(CRMSynchronizeNow_Promoted; CRMSynchronizeNow)
-                {
-                }
+                actionref(ShowLog_Promoted; ShowLog) { }
+                actionref(CRMSynchronizeNow_Promoted; CRMSynchronizeNow) { }
             }
         }
     }
@@ -2999,10 +2950,12 @@ page 50052 "Sales Order Export"
 
     procedure UpdateShipToBillToGroupVisibility()
     var
-    // ShipToOptions1: Option "Default (Sell-to Address)","Alternate Shipping Address","Custom Address";
+        ShipToOptions_Loc: Option "Default (Sell-to Address)","Alternate Shipping Address","Custom Address";
+        BillToOptions_Loc: Option "Default (Customer)","Another Customer","Custom Address";
     begin
-        CustomerMgt.CalculateShipToBillToOptions(ShipToOptions, BillToOptions, Rec);
-
+        ShipToOptions_Loc := ShipToOptions.AsInteger();
+        BillToOptions_Loc := BillToOptions.AsInteger();
+        CustomerMgt.CalculateShipToBillToOptions(ShipToOptions_Loc, BillToOptions_Loc, Rec);
     end;
 
     procedure SetPostingGroupEditable()

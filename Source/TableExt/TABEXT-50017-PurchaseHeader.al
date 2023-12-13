@@ -68,13 +68,26 @@ tableextension 50017 PurchaseHeader extends "Purchase Header"
             OptionCaption = ' ,Buyer Scope,Supplier Scope';
             OptionMembers = " ","Buyer Scope","Supplier Scope";
         }
-        field(50018; "Valid Till"; Date)
-        {
-        }
+        field(50018; "Valid Till"; Date) { }
         field(50019; "Creation Tin&Drum&Bucket Item"; Boolean)
         {
             DataClassification = ToBeClassified;
         }
+        field(50020; "Activity Name"; Text[100])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(50021; "Activity City"; Code[20])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(50022; "Activity State"; Code[20])
+        {
+
+        }
+        field(50023; "Sales Channel"; Enum "Sales Channel") { }
+        field(50024; "Release Honey PO"; Boolean) { }
+
         field(80002; "GST Dependency Type"; Option)
         {
             OptionMembers = " ","Buy-from Address","Order Address","Location Address";
@@ -98,7 +111,6 @@ tableextension 50017 PurchaseHeader extends "Purchase Header"
                 intEntryNo: Integer;
                 decQuantity: Decimal;
             begin
-
 
                 IF "Scan Bar Code" <> '' THEN BEGIN
                     //cdBarCodeID := COPYSTR("Scan Bar Code", STRPOS("Scan Bar Code", '/')+1);

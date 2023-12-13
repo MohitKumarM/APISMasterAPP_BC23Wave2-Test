@@ -157,6 +157,10 @@ table 50006 "Batch Process Line"
             Description = 'Weighing Register';
             DataClassification = ToBeClassified;
         }
+        field(2004; Tin; Decimal) { }
+        field(2005; Drum; Decimal) { }
+        field(2006; Can; Decimal) { }
+        field(2007; Bucket; Decimal) { }
     }
 
     keys
@@ -167,9 +171,7 @@ table 50006 "Batch Process Line"
         }
     }
 
-    fieldgroups
-    {
-    }
+    fieldgroups { }
 
     var
         recItemLedger: Record "Item Ledger Entry";

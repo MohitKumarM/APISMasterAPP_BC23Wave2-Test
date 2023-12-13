@@ -9,7 +9,8 @@ page 50072 "Production Material Issue"
     SourceTable = "Production Order";
     SourceTableView = WHERE(Status = CONST(Released),
                             Refreshed = FILTER(True),
-                            "Requested Material Issue" = FILTER(true));
+                            "Requested Material Issue" = FILTER(true),
+                            "Requested Material Issued" = filter(false));
 
     layout
     {
@@ -21,27 +22,13 @@ page 50072 "Production Material Issue"
                 {
                     Lookup = false;
                 }
-                field("Customer Code"; Rec."Customer Code")
-                {
-                }
-                field("Customer Name"; Rec."Customer Name")
-                {
-                }
-                field("Batch No."; Rec."Batch No.")
-                {
-                }
-                field("Production Type"; Rec."Production Type")
-                {
-                }
-                field("Source No."; Rec."Source No.")
-                {
-                }
-                field(Description; Rec.Description)
-                {
-                }
-                field(Quantity; Rec.Quantity)
-                {
-                }
+                field("Customer Code"; Rec."Customer Code") { }
+                field("Customer Name"; Rec."Customer Name") { }
+                field("Batch No."; Rec."Batch No.") { }
+                field("Production Type"; Rec."Production Type") { }
+                field("Source No."; Rec."Source No.") { }
+                field(Description; Rec.Description) { }
+                field(Quantity; Rec.Quantity) { }
                 field("Shortcut Dimension 1 Code"; Rec."Shortcut Dimension 1 Code")
                 {
                     Visible = false;
@@ -54,12 +41,8 @@ page 50072 "Production Material Issue"
                 {
                     Visible = false;
                 }
-                field(Status; Rec.Status)
-                {
-                }
-                field("Search Description"; Rec."Search Description")
-                {
-                }
+                field(Status; Rec.Status) { }
+                field("Search Description"; Rec."Search Description") { }
             }
         }
     }
@@ -152,9 +135,7 @@ page 50072 "Production Material Issue"
                         Rec.ShowDocDim;
                     end;
                 }
-                separator(Sept)
-                {
-                }
+                separator(Sept) { }
                 action(Statistics)
                 {
                     Caption = 'Statistics';
@@ -175,43 +156,19 @@ page 50072 "Production Material Issue"
             {
                 Caption = 'F&unctions';
                 Image = "Action";
-                action("Lot Tracking Lines")
-                {
-                    Caption = 'Item &Tracking Lines';
-                    Image = ItemTrackingLines;
-                    Promoted = true;
+                ShowAs = Standard;
 
-                    trigger OnAction()
-                    var
-                        recLotTracking: Record "Tran. Lot Tracking";
-                        pgLotTracking: Page "Cons. Lot Tracking Entry";
-                    begin
-                        recPurchaseSetup.GET;
-                        recPurchaseSetup.TESTFIELD("Raw Honey Item");
-
-                        recLotTracking.RESET;
-                        recLotTracking.FILTERGROUP(2);
-                        recLotTracking.SETRANGE("Document Type", recLotTracking."Document Type"::Consumption);
-                        recLotTracking.SETRANGE("Document No.", Rec."No.");
-                        recLotTracking.SETRANGE("Document Line No.", 10000);
-                        recLotTracking.SETRANGE("Item No.", recPurchaseSetup."Raw Honey Item");
-                        recLotTracking.FILTERGROUP(0);
-
-                        CLEAR(pgLotTracking);
-                        pgLotTracking.SetDocumentNo(Rec."No.", 10000, recPurchaseSetup."Raw Honey Item", Rec.Quantity, Rec."Location Code", 1);
-                        pgLotTracking.SETTABLEVIEW(recLotTracking);
-                        pgLotTracking.RUN;
-                    end;
-                }
                 action(Components)
                 {
                     Caption = 'Components';
                     Image = Components;
                     Promoted = true;
+                    PromotedCategory = Process;
+                    PromotedIsBig = true;
+                    ApplicationArea = All;
 
                     trigger OnAction()
                     begin
-                        //Rec.TESTFIELD("Order Type", "Order Type"::Packing);
 
                         recProdOrderComponent.SETRANGE(Status, Rec.Status);
                         recProdOrderComponent.SETRANGE("Prod. Order No.", Rec."No.");
@@ -225,15 +182,23 @@ page 50072 "Production Material Issue"
                         //PAGE.RUN(PAGE::"Prod. Order Components", recProdOrderComponent);
                     end;
                 }
+
                 action("Issue Material")
                 {
                     Caption = 'Issue Material';
                     Image = ConsumptionJournal;
                     Promoted = true;
+                    PromotedCategory = Process;
+                    PromotedIsBig = true;
+                    ApplicationArea = All;
 
                     trigger OnAction()
+                    var
+
                     begin
                         IF Rec."Order Type" = Rec."Order Type"::Production THEN BEGIN
+
+
                             CLEAR(rptCalcConsumption);
 
                             recManufacturingSetup.GET;
@@ -246,7 +211,8 @@ page 50072 "Production Material Issue"
                             rptCalcConsumption.RUNMODAL;
 
                             CLEAR(pgConsumptionJournal);
-                            pgConsumptionJournal.RUN;
+                            pgConsumptionJournal.ProdOrderNo(Rec."No.");
+                            pgConsumptionJournal.Run();
                         END ELSE BEGIN
                             recInventorySetup.GET;
                             recInventorySetup.TESTFIELD("Material Issue Entry Template");
@@ -350,21 +316,22 @@ page 50072 "Production Material Issue"
                             recItemJournal.RESET;
                             recItemJournal.SETRANGE("Journal Template Name", recInventorySetup."Material Issue Entry Template");
                             recItemJournal.SETRANGE("Journal Batch Name", recInventorySetup."Material Issue Entry Batch");
-                            PAGE.RUN(393, recItemJournal);
-                            /*
-                            CLEAR(pgItemTransfer);
-                            pgItemTransfer.SETTABLEVIEW(recItemJournal);
-                            pgItemTransfer.RUN;
-                            */
+                            //PAGE.RUN(Page::"Item Reclass. Journal", recItemJournal);
+                            ItemReclassPage.SetTableView(recItemJournal);
+                            ItemReclassPage.ProdOrderNo(Rec."No.");
+                            ItemReclassPage.Run();
                         END;
-
                     end;
                 }
+                separator(Separator1) { }
                 action("Send Back")
                 {
                     Caption = 'Send Back';
                     Image = SendTo;
                     Promoted = true;
+                    PromotedCategory = Process;
+                    PromotedIsBig = true;
+                    ApplicationArea = All;
 
                     trigger OnAction()
                     begin
@@ -377,23 +344,54 @@ page 50072 "Production Material Issue"
                         CurrPage.UPDATE;
                     end;
                 }
+
+                action("Lot Tracking Lines")
+                {
+                    Caption = 'Item &Tracking Lines';
+                    Image = ItemTrackingLines;
+                    Promoted = true;
+                    PromotedCategory = Process;
+                    PromotedIsBig = true;
+                    ApplicationArea = All;
+
+                    trigger OnAction()
+                    var
+                        recLotTracking: Record "Tran. Lot Tracking";
+                        pgLotTracking: Page "Cons. Lot Tracking Entry";
+                    begin
+                        recPurchaseSetup.GET;
+                        recPurchaseSetup.TESTFIELD("Raw Honey Item");
+
+                        recLotTracking.RESET;
+                        recLotTracking.FILTERGROUP(2);
+                        recLotTracking.SETRANGE("Document Type", recLotTracking."Document Type"::Consumption);
+                        recLotTracking.SETRANGE("Document No.", Rec."No.");
+                        recLotTracking.SETRANGE("Document Line No.", 10000);
+                        recLotTracking.SETRANGE("Item No.", recPurchaseSetup."Raw Honey Item");
+                        recLotTracking.FILTERGROUP(0);
+
+                        CLEAR(pgLotTracking);
+                        pgLotTracking.SetDocumentNo(Rec."No.", 10000, recPurchaseSetup."Raw Honey Item", Rec.Quantity, Rec."Location Code", 1);
+                        pgLotTracking.SETTABLEVIEW(recLotTracking);
+                        pgLotTracking.RUN;
+                    end;
+                }
             }
         }
     }
 
     var
         recProdOrderComponent: Record "Prod. Order Component";
-        rptCalcConsumption: Report "Calc. Consumption";
+        rptCalcConsumption: Report "Calc. ConsumptionN";
         recManufacturingSetup: Record "Manufacturing Setup";
+        ItemReclassPage: Page "Item Reclass. Journal";
         pgConsumptionJournal: Page "Consumption Journal";
         recPurchaseSetup: Record "Purchases & Payables Setup";
         recItemJournal: Record "Item Journal Line";
         recInventorySetup: Record "Inventory Setup";
         intLineNo: Integer;
-        recLocation: Record "Location";
         recReservationEntry: Record "Reservation Entry";
         recReservationEntrySource: Record "Reservation Entry";
         intEntryNo: Integer;
         pgComponent: Page "Prod. Order Components";
 }
-

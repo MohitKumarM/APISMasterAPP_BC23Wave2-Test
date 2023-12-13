@@ -45,7 +45,6 @@ pageextension 50042 MyExtension extends "Prod. Order Components"
         {
             Visible = false;
         }
-
         modify("Put-away/Pick Lines/Movement Lines")
         {
             Visible = false;
@@ -67,6 +66,11 @@ pageextension 50042 MyExtension extends "Prod. Order Components"
                 var
                     recLotTracking: Record "Tran. Lot Tracking";
                     pgLotTracking: Page "Cons. Lot Tracking Entry";
+                    ProdOrder_Loc: Record "Production Order";
+                    LocationCode_Loc1: Record Location;
+                    LocationCode_Loc2: Record Location;
+                    prodordercomponent_Loc: Record "Prod. Order Component";
+
                 begin
 
                     Rec.TESTFIELD("Item No.");
@@ -75,6 +79,17 @@ pageextension 50042 MyExtension extends "Prod. Order Components"
                     recPurchSetup.TESTFIELD("Raw Honey Item");
                     recItem.GET(Rec."Item No.");
                     recProductGroup.GET(recItem."New Product Group Code", recItem."Item Category Code");
+
+                    ProdOrder_Loc.Get(Rec.Status, Rec."Prod. Order No.");
+                    Rec."Location Code" := ProdOrder_Loc."Location Code";
+                    LocationCode_Loc1.Get(Rec."Location Code");
+                    LocationCode_Loc2.Reset();
+                    LocationCode_Loc2.SetRange("Associated Plant", LocationCode_Loc1."Associated Plant");
+                    LocationCode_Loc2.SetRange("Store Location", true);
+                    IF not LocationCode_Loc2.FindFirst() then begin
+                        LocationCode_Loc2.SetRange("Associated Plant");
+                        LocationCode_Loc2.FindFirst();
+                    end;
 
                     IF recProductGroup."Allow Direct Purch. Order" THEN BEGIN
                         recLotTracking.RESET;
@@ -86,9 +101,9 @@ pageextension 50042 MyExtension extends "Prod. Order Components"
                         recLotTracking.FILTERGROUP(0);
 
                         CLEAR(pgLotTracking);
-                        pgLotTracking.SetDocumentNo(Rec."Prod. Order No.", Rec."Prod. Order Line No.", Rec."Item No.", Rec."Remaining Quantity", Rec."Location Code", 1);
+                        pgLotTracking.SetDocumentNo(Rec."Prod. Order No.", Rec."Prod. Order Line No.", Rec."Item No.", Rec."Remaining Quantity", LocationCode_Loc2.Code, 1);
                         pgLotTracking.SETTABLEVIEW(recLotTracking);
-                        pgLotTracking.RUN;
+                        pgLotTracking.RunModal();
                     END ELSE BEGIN
                         recItemLedger.RESET;
                         recItemLedger.SETRANGE("Entry Type", recItemLedger."Entry Type"::Consumption);
@@ -107,22 +122,19 @@ pageextension 50042 MyExtension extends "Prod. Order Components"
 
                         Rec.OpenItemTrackingLines;
                     END;
+                    IF (ProdOrder_Loc.Refreshed) then begin
+                        Rec."Location Code" := LocationCode_Loc2.Code;
+                        Rec.Modify();
+                    end;
                 end;
             }
         }
-
     }
-
-    var
-        myInt: Integer;
 
     procedure CalculateQuantityRequired(): Decimal
     var
         ProdOrderLine: Record "Prod. Order Line";
         ProdOrderRtngLine: Record "Prod. Order Routing Line";
-        Item_Loc: Record Item;
-        ProdBomHeader: Record "Production BOM Header";
-        ProdBomLine: Record "Production BOM Line";
         TotalQuantityWithScrap: Decimal;
         NetScrap: Decimal;
 
@@ -161,6 +173,4 @@ pageextension 50042 MyExtension extends "Prod. Order Components"
         recItem: Record "Item";
         recItemLedger: Record "Item Ledger Entry";
         recReservationEntry: Record "Reservation Entry";
-
-
 }

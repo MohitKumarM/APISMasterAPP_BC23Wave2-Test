@@ -1,4 +1,4 @@
-page 50087 "Cons. Lot Tracking Entry"
+page 50073 "Cons. Lot Tracking Entry"
 {
     DelayedInsert = true;
     LinksAllowed = false;
@@ -15,7 +15,6 @@ page 50087 "Cons. Lot Tracking Entry"
             {
                 field("Ref. Entry No."; Rec."Ref. Entry No.")
                 {
-
                     trigger OnLookup(var Text: Text): Boolean
                     begin
                         recLotEntry.RESET;
@@ -38,7 +37,11 @@ page 50087 "Cons. Lot Tracking Entry"
                             Rec."Item No." := recLotEntry."Item No.";
                             Rec."Lot No." := recLotEntry."Lot No.";
                             Rec.Flora := recLotEntry.Flora;
-                            Rec."Packing Type" := recLotEntry."Packing Type";
+                            // Rec."Packing Type" := recLotEntry."Packing Type";
+                            rec.Tin := recLotEntry.Tin;
+                            rec.Bucket := recLotEntry.Bucket;
+                            rec.Can := recLotEntry.Can;
+                            rec.Drum := recLotEntry.Drum;
                             Rec."Average Qty. In Pack" := recLotEntry."Average Qty. In Pack";
                             Rec."Document No." := cdDocumentNo;
                             Rec."Document Line No." := intLineNo;
@@ -67,13 +70,24 @@ page 50087 "Cons. Lot Tracking Entry"
                 {
                     Editable = false;
                 }
-                field("Packing Type"; Rec."Packing Type")
+                field(Tin; Rec.Tin)
                 {
-                    Editable = false;
+                    ApplicationArea = all;
+                }
+                field(Drum; Rec.Drum)
+                {
+                    ApplicationArea = all;
+                }
+                field(Bucket; Rec.Bucket)
+                {
+                    ApplicationArea = all;
+                }
+                field(Can; Rec.Can)
+                {
+                    ApplicationArea = all;
                 }
                 field("Qty. In Packs"; Rec."Qty. In Packs")
                 {
-
                     trigger OnValidate()
                     begin
                         IF Rec."Remaining Qty. In Packs" - Rec."Qty. In Packs" < 0 THEN
@@ -94,19 +108,13 @@ page 50087 "Cons. Lot Tracking Entry"
                 {
                     Editable = false;
                 }
-                field("Remaining Qty. In Packs"; Rec."Remaining Qty. In Packs")
-                {
-                }
-                field("Remaining Quantity"; Rec."Remaining Quantity")
-                {
-                }
+                field("Remaining Qty. In Packs"; Rec."Remaining Qty. In Packs") { }
+                field("Remaining Quantity"; Rec."Remaining Quantity") { }
             }
         }
     }
 
-    actions
-    {
-    }
+    actions { }
 
     trigger OnInsertRecord(BelowxRec: Boolean): Boolean
     begin
@@ -125,13 +133,10 @@ page 50087 "Cons. Lot Tracking Entry"
         intLineNo: Integer;
         cdItemCode: Code[20];
         decTotalToRcd: Decimal;
-        decRemQty: Decimal;
-        decAppliedQty: Decimal;
         recLotTracking: Record "Tran. Lot Tracking";
         recLotEntry: Record "Lot Tracking Entry";
         cdLocationCode: Code[20];
         opDocumentType: Option "Purch. Receipt",Consumption;
-
 
     procedure SetDocumentNo(DocNo: Code[20]; LineNo: Integer; ItemNo: Code[20]; QtyToRcd: Decimal; LocationCode: Code[20]; DocumentType: Integer)
     begin
@@ -143,4 +148,3 @@ page 50087 "Cons. Lot Tracking Entry"
         opDocumentType := DocumentType;
     end;
 }
-

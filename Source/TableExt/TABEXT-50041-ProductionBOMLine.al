@@ -2,8 +2,10 @@ tableextension 50041 "Production Bom Line Ext" extends "Production BOM Line"
 {
     fields
     {
-        field(560000; "Wastage %"; Decimal)
-        { }
+        field(50000; "Wastage %"; Decimal)
+        {
+
+        }
         Field(50001; "FG Name"; Text[50]) { }
         Field(50002; "Product Group"; Code[20]) { }
         Field(50003; "Customer Code"; Code[20]) { }
@@ -31,7 +33,4 @@ tableextension 50041 "Production Bom Line Ext" extends "Production BOM Line"
     {
         // Add changes to field groups here
     }
-
-    var
-        myInt: Integer;
 }

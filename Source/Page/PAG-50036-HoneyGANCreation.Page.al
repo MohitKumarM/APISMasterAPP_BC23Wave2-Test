@@ -1,4 +1,4 @@
-page 50036 "Honey GAN Creation"
+/* page 50036 "Honey GAN Creation"
 {
     CardPageID = "Honey GAN Order";
     DeleteAllowed = false;
@@ -146,3 +146,4 @@ page 50036 "Honey GAN Creation"
         }
     }
 }
+ */

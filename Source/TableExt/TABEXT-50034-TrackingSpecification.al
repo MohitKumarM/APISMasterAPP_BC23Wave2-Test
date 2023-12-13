@@ -6,6 +6,13 @@ tableextension 50034 TrackingSpecfication extends "Tracking Specification"
         {
             DataClassification = ToBeClassified;
         }
+        Field(50002; "Packing Type"; Option)
+        {
+            OptionMembers = ,Drums,Tins,Buckets,Cans;
+        }
+        field(50003; "Qty. in Pack"; Decimal) { }
+        field(50004; "Qty. Per Pack"; Decimal) { }
+        field(50005; "Original Qty. in Pack"; Decimal) { }
         field(50020; "Tin"; Decimal)
         {
             DataClassification = ToBeClassified;
@@ -22,11 +29,11 @@ tableextension 50034 TrackingSpecfication extends "Tracking Specification"
         {
             DataClassification = ToBeClassified;
         }
-        field(50026; "Can"; Decimal)
+        field(50025; "ILE No."; Integer)
         {
             DataClassification = ToBeClassified;
         }
-        field(50025; "ILE No."; Integer)
+        field(50026; "Can"; Decimal)
         {
             DataClassification = ToBeClassified;
         }
@@ -34,8 +41,6 @@ tableextension 50034 TrackingSpecfication extends "Tracking Specification"
 
     keys
     {
-        key(Key20; "ILE No.")
-        {
-        }
+        key(Key20; "ILE No.") { }
     }
 }

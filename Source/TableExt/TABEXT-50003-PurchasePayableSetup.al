@@ -10,11 +10,6 @@ tableextension 50003 PurchPayableSetup extends "Purchases & Payables Setup"
         {
             TableRelation = "No. Series";
         }
-        field(50009; "CAN Item"; Code[20])
-        {
-            DataClassification = ToBeClassified;
-            TableRelation = Item;
-        }
         field(50004; "PO Terms & Conditions"; Text[2048])
         {
             DataClassification = ToBeClassified;
@@ -34,8 +29,11 @@ tableextension 50003 PurchPayableSetup extends "Purchases & Payables Setup"
             DataClassification = ToBeClassified;
             TableRelation = Item;
         }
-        field(70001; "Deal Tolerance"; Decimal)
+        field(50009; "CAN Item"; Code[20])
         {
+            DataClassification = ToBeClassified;
+            TableRelation = Item;
         }
+        field(70001; "Deal Tolerance"; Decimal) { }
     }
 }

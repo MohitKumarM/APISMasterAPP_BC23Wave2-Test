@@ -33,6 +33,7 @@ tableextension 50000 UserSetup extends "User Setup"
             OptionCaption = ' ,All,Honey,Packing,Other';
             OptionMembers = " ",All,Honey,Packing,Other;
         }
+        field(50009; "Allow Item Journal Posting"; Boolean) { }
         field(50012; "Allow Customer Approval"; Boolean)
         {
             trigger OnValidate()
@@ -58,6 +59,10 @@ tableextension 50000 UserSetup extends "User Setup"
                         ERROR('Approval rights in multiple modules can not be assigned to a limited user.');
                 END;
             end;
+        }
+        field(50014; "Allow Item Approval"; Boolean)
+        {
+            DataClassification = ToBeClassified;
         }
         field(50015; "Allow Purch. Order Approval"; Boolean)
         {
@@ -112,6 +117,10 @@ tableextension 50000 UserSetup extends "User Setup"
                 IF (recUser."License Type" = recUser."License Type"::"Limited User") AND ("Allow Send Back Deal") THEN
                     ERROR('Posting rights can not be assigned to a limited user.');
             end;
+        }
+        field(50024; "Flora Visibilty"; Boolean)
+        {
+            DataClassification = ToBeClassified;
         }
     }
 

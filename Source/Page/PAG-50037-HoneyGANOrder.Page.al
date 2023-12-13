@@ -1,4 +1,4 @@
-page 50037 "Honey GAN Order"
+/* page 50037 "Honey GAN Order"
 {
     // Caption = 'Purchase Order';
     DeleteAllowed = false;
@@ -28,6 +28,26 @@ page 50037 "Honey GAN Order"
                     field("Posting Date"; Rec."Posting Date")
                     {
                         ApplicationArea = All;
+                    }
+                    field("Activity Name"; Rec."Activity Name")
+                    {
+                        ApplicationArea = All;
+                        ToolTip = 'Specifies the value of the Activity Name field.';
+                    }
+                    field("Activity City"; Rec."Activity City")
+                    {
+                        ApplicationArea = All;
+                        ToolTip = 'Specifies the value of the Activity City field.';
+                    }
+                    field("Activity State"; Rec."Activity State")
+                    {
+                        ApplicationArea = All;
+                        ToolTip = 'Specifies the value of the Activity State field.';
+                    }
+                    field("Sales Channel"; Rec."Sales Channel")
+                    {
+                        ApplicationArea = All;
+                        ToolTip = 'Specifies the value of the Sales Channel field.';
                     }
                     field("Waybill No."; Rec."Waybill No.")
                     {
@@ -155,9 +175,7 @@ page 50037 "Honey GAN Order"
                         Importance = Promoted;
                         ApplicationArea = All;
                     }
-                    field("Document Date"; Rec."Document Date")
-                    {
-                    }
+                    field("Document Date"; Rec."Document Date") { }
                     // field(Structure; Rec.Structure)
                     // {
                     //     Importance = Promoted;
@@ -533,6 +551,8 @@ page 50037 "Honey GAN Order"
                     Caption = 'Submit for GAN Approval';
                     Image = SendTo;
                     Promoted = true;
+                    PromotedCategory = Process;
+                    PromotedIsBig = true;
 
                     trigger OnAction()
                     begin
@@ -806,3 +826,4 @@ page 50037 "Honey GAN Order"
         VendorInvoiceNoMandatory := PurchSetup."Ext. Doc. No. Mandatory";
     end;
 }
+ */

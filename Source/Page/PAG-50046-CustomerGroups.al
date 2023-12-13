@@ -41,16 +41,12 @@ page 50046 "Customer Groups"
                 }
             }
         }
-        area(Factboxes)
-        {
-
-        }
+        area(Factboxes) { }
     }
     actions
     {
         area(Processing)
         {
-
             action("Ledger E&ntries")
             {
                 ApplicationArea = Basic, Suite;
@@ -78,11 +74,8 @@ page 50046 "Customer Groups"
                                   order(Descending);
                 ShortCutKey = 'Ctrl+F7';
                 ToolTip = 'View the history of transactions that have been posted for the selected record.';
-
-
             }
         }
-
     }
 
     var
@@ -166,7 +159,7 @@ page 50046 "Customer Groups"
                 EntryNo := EntryNo + 1
             else
                 EntryNo := 1;
-            //if Rec_Customer."Parent Group" <> Rec_Customer."No." then begin
+            // if Rec_Customer."Parent Group" <> Rec_Customer."No." then begin
             Rec.Init();
             rec."Entry No." := EntryNo;
             Rec.Code := Rec_Customer."No.";
@@ -177,7 +170,7 @@ page 50046 "Customer Groups"
             i := 1;
             rec.Insert();
             PrenGrp := Rec_Customer."Parent Group";
-        //end;
+        // end;
         until Rec_Customer.Next() = 0;
     end;
 

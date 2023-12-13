@@ -4,7 +4,7 @@ pageextension 50024 "Inventory Posting Group Ext." extends "Inventory Posting Gr
     {
         addlast(Control1)
         {
-            field("Planning Applicable"; Rec."Planning Applicable")
+            field("Activate Expiry Date FIFO"; Rec."Activate Expiry Date FIFO")
             {
                 ApplicationArea = All;
             }

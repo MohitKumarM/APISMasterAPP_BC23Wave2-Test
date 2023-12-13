@@ -3,7 +3,6 @@ codeunit 50000 Tble83
     trigger OnRun()
     begin
     end;
-    // Table83 Start
 
     var
         MRPPrice: Decimal;
@@ -14,6 +13,31 @@ codeunit 50000 Tble83
         Bucket: Decimal;
         ILENo: Integer;
         Can: Decimal;
+
+
+
+    // Table337 Start
+    [EventSubscriber(ObjectType::Table, Database::"Reservation Entry", 'OnAfterInsertEvent', '', false, false)]
+    local procedure OnAfterInsertEventReservationEntry(var Rec: Record "Reservation Entry"; RunTrigger: Boolean)
+    var
+        PurchNPayable: Record "Purchases & Payables Setup";
+        LotTracking: Record "Lot Tracking Entry";
+    begin
+        PurchNPayable.Get();
+        IF (Rec."Item No." = PurchNPayable."Raw Honey Item") and (Rec."Reservation Status" = Rec."Reservation Status"::Surplus) and (Rec."Source Type" = 39) and (Rec."Source Subtype" = Rec."Source Subtype"::"1") then begin
+            //LotTracking.Init();
+            //LotTracking.
+        end;
+    end;
+    //Table337 End
+
+    // Table83 Start
+    [EventSubscriber(ObjectType::Table, Database::"Item Journal Line", 'OnBeforeValidateLocationCode', '', false, false)]
+    local procedure OnBeforeValidateLocationCode(var ItemJournalLine: Record "Item Journal Line"; xItemJournalLine: Record "Item Journal Line"; var IsHandled: Boolean);
+    begin
+        if (ItemJournalLine."Entry Type" = ItemJournalLine."Entry Type"::Consumption) then
+            IsHandled := true;
+    end;
 
     [EventSubscriber(ObjectType::Table, Database::"Item Journal Line", 'OnAfterCopyItemJnlLineFromPurchLine', '', false, false)]
     local procedure OnAfterCopyItemJnlLineFromPurchLine(var ItemJnlLine: Record "Item Journal Line"; PurchLine: Record "Purchase Line")
@@ -40,10 +64,78 @@ codeunit 50000 Tble83
 
     // Table83 End
 
+    // //Table5407
+    // [EventSubscriber(ObjectType::Table, Database::"Prod. Order Component", 'OnAfterValidateEvent', 'Item No.', false, false)]
+    // local procedure MyProcedure(var Rec: Record "Prod. Order Component"; var xRec: Record "Prod. Order Component"; CurrFieldNo: Integer)
+    // var
+    //     Location_Loc1: Record Location;
+    //     Location_Loc2: Record Location;
+    //     ProdOrder_Loc: Record "Production Order";
+
+    // begin
+    //     IF ProdOrder_Loc.Get(Rec.Status, Rec."Prod. Order No.") then
+    //         if Location_Loc1.Get(ProdOrder_Loc."Location Code") then begin
+    //             Location_Loc2.Reset();
+    //             Location_Loc2.SetRange("Associated Plant", Location_Loc1."Associated Plant");
+    //             Location_Loc2.SetRange("Store Location", true);
+    //             if not Location_Loc2.FindFirst() then begin
+    //                 Location_Loc2.SetRange("Associated Plant");
+
+    //             end;
+    //             IF Location_Loc2.FindFirst() then
+    //                 Rec.Validate("Location Code", Location_Loc2.Code)
+    //             else
+    //                 Rec.Validate("Location Code", Rec."Location Code");
+
+    //         end;
+
+    // end;
+
+    // //Table5407
+
+
+    //Codeunit99000773
+    [EventSubscriber(ObjectType::Codeunit, Codeunit::"Calculate Prod. Order", 'OnAfterTransferBOMComponent', '', false, false)]
+    local procedure OnAfterTransferBOMComponent(var ProdOrderLine: Record "Prod. Order Line"; var ProductionBOMLine: Record "Production BOM Line"; var ProdOrderComponent: Record "Prod. Order Component"; LineQtyPerUOM: Decimal; ItemQtyPerUOM: Decimal)
+    var
+        Location_Loc1: Record Location;
+        Location_Loc2: Record Location;
+        ProdOrder_Loc: Record "Production Order";
+
+    begin
+        IF ProdOrder_Loc.Get(ProdOrderLine.Status, ProdOrderLine."Prod. Order No.") then
+            if Location_Loc1.Get(ProdOrder_Loc."Location Code") then begin
+                Location_Loc2.Reset();
+                Location_Loc2.SetRange("Associated Plant", Location_Loc1."Associated Plant");
+                Location_Loc2.SetRange("Store Location", true);
+                if not Location_Loc2.FindFirst() then begin
+                    Location_Loc2.SetRange("Associated Plant");
+                end;
+                IF Location_Loc2.FindFirst() then
+                    ProdOrderComponent.Validate("Location Code", Location_Loc2.Code);
+            end;
+    end;
+    //Codeunit99000773
+
+
+
     // Codeunit22 Start
     [EventSubscriber(ObjectType::Codeunit, Codeunit::"Item Jnl.-Post Line", 'OnAfterInitItemLedgEntry', '', false, false)]
     local procedure OnAfterInitItemLedgEntry(var NewItemLedgEntry: Record "Item Ledger Entry"; var ItemJournalLine: Record "Item Journal Line"; var ItemLedgEntryNo: Integer)
     var
+        recItemCategory: Record "Item Category";
+        recItemLedgerEntry: Record "Item Ledger Entry";
+        recItem: Record Item;
+        recInventoryPostingGroup: Record "Inventory Posting Group";
+        recLotTracking: Record "Tran. Lot Tracking";
+        recPostedLotTracking: Record "Lot Tracking Entry";
+        intEntryNo: Integer;
+        recSourceLotEntry: Record "Lot Tracking Entry";
+        recPurchaseSetup: Record "Purchases & Payables Setup";
+        dtExpiryDate: Date;
+        ProdOrder_loc: Record "Production Order";
+        Location_Loc: Record Location;
+        Location_Loc1: Record Location;
     begin
         NewItemLedgEntry."Deal No." := ItemJournalLine."Deal No.";
         NewItemLedgEntry."Deal Line No." := ItemJournalLine."Deal Line No.";
@@ -58,6 +150,302 @@ codeunit 50000 Tble83
         NewItemLedgEntry.Drum := ItemJournalLine.Drum;
         NewItemLedgEntry.Bucket := ItemJournalLine.Bucket;
         NewItemLedgEntry.Can := ItemJournalLine.Can;
+        NewItemLedgEntry."Container Trasfer Stage" := ItemJournalLine."Container Trasfer Stage";
+        NewItemLedgEntry."Trade Type" := ItemJournalLine."Trade Type";
+        NewItemLedgEntry."Production Sub Type" := ItemJournalLine."Production Sub Type";
+
+        //>>
+
+        IF NewItemLedgEntry."Document Type" = NewItemLedgEntry."Document Type"::"Purchase Receipt" THEN BEGIN
+            IF (recItemCategory.GET(NewItemLedgEntry."Item Category Code")) AND (recItemCategory."Inward QC Required" = FALSE) THEN BEGIN
+                NewItemLedgEntry."Quality Checked" := TRUE;
+                NewItemLedgEntry."Approved Quantity" := NewItemLedgEntry.Quantity;
+            END;
+        END;
+
+        NewItemLedgEntry."Inventory Posting Group" := recItem."Inventory Posting Group";
+
+        NewItemLedgEntry."ByProduct Entry" := ItemJournalLine."ByProduct Entry";
+        NewItemLedgEntry."Prod. Order Line No." := ItemJournalLine."Prod. Order Line No.";
+        NewItemLedgEntry."Machine Center No." := ItemJournalLine."Machine Center No.";
+        NewItemLedgEntry."Starting Date Time" := ItemJournalLine."Starting Date Time";
+        NewItemLedgEntry."Ending Date Time" := ItemJournalLine."Ending Date Time";
+
+        if (ItemJournalLine."Order Type" = ItemJournalLine."Order Type"::Production) then begin
+            ProdOrder_loc.Reset();
+            ProdOrder_loc.SetRange("No.", ItemJournalLine."Document No.");
+            if ProdOrder_loc.FindFirst() then begin
+                NewItemLedgEntry."Trade Type" := ProdOrder_loc."Trade Type";
+                NewItemLedgEntry."Production Sub Type" := ProdOrder_loc."Production Sub Type";
+                NewItemLedgEntry."Output for Customer" := ProdOrder_loc."Customer Code";
+            end;
+        end;
+
+        //Expiry Date
+        IF NewItemLedgEntry.Quantity > 0 THEN BEGIN
+            IF NewItemLedgEntry."Entry Type" = NewItemLedgEntry."Entry Type"::Output THEN BEGIN
+                ItemJournalLine.TESTFIELD("Prod. Date for Expiry Calc");
+                recItem.GET(NewItemLedgEntry."Item No.");
+                IF FORMAT(recItem."Expiry Date Formula") <> '' THEN BEGIN
+                    NewItemLedgEntry."Expiration Date" := CALCDATE(recItem."Expiry Date Formula", ItemJournalLine."Prod. Date for Expiry Calc");
+                END;
+            END ELSE
+                IF NewItemLedgEntry."Lot No." <> '' THEN BEGIN
+                    recItem.GET(NewItemLedgEntry."Item No.");
+                    recInventoryPostingGroup.GET(recItem."Inventory Posting Group");
+                    IF (recInventoryPostingGroup."Activate Expiry Date FIFO") AND (NewItemLedgEntry."Expiration Date" = 0D) THEN
+                        ERROR('Expiry must not be blank on lot no. %1', NewItemLedgEntry."Lot No.");
+                END;
+        END ELSE
+            IF (NewItemLedgEntry."Lot No." <> '') AND (NewItemLedgEntry.Quantity < 0) AND (NewItemLedgEntry."Entry Type" <> NewItemLedgEntry."Entry Type"::Transfer) THEN BEGIN
+                recItem.GET(NewItemLedgEntry."Item No.");
+                recInventoryPostingGroup.GET(recItem."Inventory Posting Group");
+                IF recInventoryPostingGroup."Activate Expiry Date FIFO" THEN BEGIN
+                    recItemLedgerEntry.RESET;
+                    recItemLedgerEntry.SETRANGE("Item No.", NewItemLedgEntry."Item No.");
+                    recItemLedgerEntry.SETRANGE("Lot No.", NewItemLedgEntry."Lot No.");
+                    recItemLedgerEntry.SETRANGE("Location Code", NewItemLedgEntry."Location Code");
+                    recItemLedgerEntry.SETRANGE("Expiration Date", 0D);
+                    recItemLedgerEntry.SETRANGE(Open, TRUE);
+                    IF NOT recItemLedgerEntry.FINDFIRST THEN BEGIN
+                        recItemLedgerEntry.RESET;
+                        recItemLedgerEntry.SETRANGE("Item No.", NewItemLedgEntry."Item No.");
+                        recItemLedgerEntry.SETRANGE("Lot No.", NewItemLedgEntry."Lot No.");
+                        recItemLedgerEntry.SETRANGE("Location Code", NewItemLedgEntry."Location Code");
+                        recItemLedgerEntry.SETFILTER("Expiration Date", '<>%1', 0D);
+                        recItemLedgerEntry.SETRANGE(Open, TRUE);
+                        recItemLedgerEntry.FINDFIRST;
+                        dtExpiryDate := recItemLedgerEntry."Expiration Date";
+
+                        recItemLedgerEntry.RESET;
+                        recItemLedgerEntry.SETRANGE("Item No.", NewItemLedgEntry."Item No.");
+                        recItemLedgerEntry.SETFILTER("Lot No.", '<>%1', NewItemLedgEntry."Lot No.");
+                        recItemLedgerEntry.SETRANGE("Location Code", NewItemLedgEntry."Location Code");
+                        recItemLedgerEntry.SETFILTER("Expiration Date", '<%1', dtExpiryDate);
+                        recItemLedgerEntry.SETRANGE(Open, TRUE);
+                        IF recItemLedgerEntry.FINDFIRST THEN
+                            ERROR('The stock is available with earlier expiry date, select the same first.', recItemLedgerEntry."Lot No.");
+                    END;
+                END;
+            END;
+        // - Expiry Date
+
+        //- RM Lot Tracking
+        IF NewItemLedgEntry."Document Type" IN [NewItemLedgEntry."Document Type"::"Sales Return Receipt", NewItemLedgEntry."Document Type"::"Sales Credit Memo"] THEN BEGIN
+            recPostedLotTracking.RESET;
+            IF recPostedLotTracking.FINDLAST THEN
+                intEntryNo := recPostedLotTracking."Entry No."
+            ELSE
+                intEntryNo := 0;
+
+            recPurchaseSetup.GET;
+            recPurchaseSetup.TESTFIELD("Raw Honey Item");
+            IF recPurchaseSetup."Raw Honey Item" = NewItemLedgEntry."Item No." THEN BEGIN
+                recPostedLotTracking.INIT;
+                intEntryNo += 1;
+                recPostedLotTracking."Entry No." := intEntryNo;
+                recPostedLotTracking."Item No." := recPurchaseSetup."Raw Honey Item";
+                recPostedLotTracking."Lot No." := NewItemLedgEntry."Lot No.";
+                recPostedLotTracking.Flora := '';
+
+                ItemJournalLine.TESTFIELD("Packing Type");
+                ItemJournalLine.TESTFIELD("Qty. in Pack");
+                ItemJournalLine.TESTFIELD("Customer Code");
+
+                // 15800  recPostedLotTracking."Packing Type" := ItemJournalLine."Packing Type";
+                recPostedLotTracking.Tin := ItemJournalLine.Tin;
+                recPostedLotTracking.Drum := ItemJournalLine.Drum;
+                recPostedLotTracking.Can := ItemJournalLine.Can;
+                recPostedLotTracking.Bucket := ItemJournalLine.Bucket;
+                recPostedLotTracking."Qty. In Packs" := ItemJournalLine."Qty. in Pack";
+                recPostedLotTracking.Customer := ItemJournalLine."Customer Code";
+                recPostedLotTracking.Quantity := NewItemLedgEntry.Quantity;
+                recPostedLotTracking."Average Qty. In Pack" := recPostedLotTracking.Quantity / recPostedLotTracking."Qty. In Packs";
+                recPostedLotTracking."Document No." := NewItemLedgEntry."Document No.";
+                recPostedLotTracking."Document Line No." := NewItemLedgEntry."Document Line No.";
+                //recPostedLotTracking."Location Code" := recPurchaseSetup."OK Store Location";
+                Location_Loc.Get(NewItemLedgEntry."Location Code");
+                IF (Location_Loc."Associated Plant" <> Location_Loc."Associated Plant"::" ") then begin
+                    Location_Loc1.Reset();
+                    Location_Loc1.SetRange("Associated Plant", Location_Loc."Associated Plant");
+                    Location_Loc1.SetRange("Store Location", true);
+                    if not Location_Loc1.FindFirst() then begin
+                        Location_Loc1.SetRange("Associated Plant");
+                        if not Location_Loc1.FindFirst() then
+                            Error('There is no store Location');
+                    end;
+                end;
+                recPostedLotTracking."Location Code" := Location_Loc1.Code;
+                //recPostedLotTracking."Location Code" := NewItemLedgEntry."Location Code"; // Removed Purchase Payable ok Store Location code(Ramesh,Ravi vivek)
+                recPostedLotTracking."Tare Weight" := 0;
+                recPostedLotTracking."Remaining Qty." := NewItemLedgEntry.Quantity;
+                recPostedLotTracking."Moisture (%)" := NewItemLedgEntry."Moisture (%)";
+                recPostedLotTracking."Color (MM)" := NewItemLedgEntry."Color (MM)";
+                recPostedLotTracking."HMF (PPM)" := NewItemLedgEntry."HMF (PPM)";
+                recPostedLotTracking.TRS := NewItemLedgEntry.TRS;
+                recPostedLotTracking.Sucrose := NewItemLedgEntry.Sucrose;
+                recPostedLotTracking.FG := NewItemLedgEntry.FG;
+                recPostedLotTracking.Positive := TRUE;
+                recPostedLotTracking."Ref. Entry No." := intEntryNo;
+                recPostedLotTracking."Stock Type" := recPostedLotTracking."Stock Type"::"Sales Return";
+                recPostedLotTracking."Posting Date" := NewItemLedgEntry."Posting Date";
+                recPostedLotTracking.INSERT;
+            END;
+        END;
+        //RM Lot Tracking
+
+        IF (NewItemLedgEntry."Entry Type" = NewItemLedgEntry."Entry Type"::Consumption) THEN BEGIN
+            recPostedLotTracking.RESET;
+            IF recPostedLotTracking.FINDLAST THEN
+                intEntryNo := recPostedLotTracking."Entry No."
+            ELSE
+                intEntryNo := 0;
+
+            recLotTracking.RESET;
+            recLotTracking.SETCURRENTKEY("Document No.", "Document Line No.", "Item No.", "Lot No.");
+            recLotTracking.SETRANGE("Document Type", recLotTracking."Document Type"::Consumption);
+            recLotTracking.SETRANGE("Document No.", NewItemLedgEntry."Document No.");
+            recLotTracking.SETRANGE("Document Line No.", NewItemLedgEntry."Order Line No.");
+            recLotTracking.SETRANGE("Item No.", NewItemLedgEntry."Item No.");
+            recLotTracking.SETRANGE("Lot No.", NewItemLedgEntry."Lot No.");
+            IF recLotTracking.FINDFIRST THEN
+                REPEAT
+                    recSourceLotEntry.GET(recLotTracking."Ref. Entry No.");
+                    recSourceLotEntry."Remaining Qty." := recSourceLotEntry."Remaining Qty." - recLotTracking.Quantity;
+                    recSourceLotEntry.MODIFY;
+
+                    recPostedLotTracking.INIT;
+                    intEntryNo += 1;
+                    recPostedLotTracking."Entry No." := intEntryNo;
+                    recPostedLotTracking."Item No." := recLotTracking."Item No.";
+                    recPostedLotTracking."Lot No." := recLotTracking."Lot No.";
+                    recPostedLotTracking.Flora := recLotTracking.Flora;
+                    //  recPostedLotTracking."Packing Type" := recLotTracking."Packing Type";
+                    recPostedLotTracking.Tin := recLotTracking.Tin;
+                    recPostedLotTracking.Drum := recLotTracking.Drum;
+                    recPostedLotTracking.Can := recLotTracking.Can;
+                    recPostedLotTracking.Bucket := recLotTracking.Bucket;
+                    recPostedLotTracking."Qty. In Packs" := -recLotTracking."Qty. In Packs";
+                    recPostedLotTracking.Quantity := -recLotTracking.Quantity;
+                    recPostedLotTracking."Average Qty. In Pack" := recLotTracking."Average Qty. In Pack";
+                    recPostedLotTracking."Document No." := recLotTracking."Document No.";
+                    recPostedLotTracking."Document Line No." := recLotTracking."Document Line No.";
+                    recPostedLotTracking."Location Code" := recLotTracking."Location Code";
+                    recPostedLotTracking."Remaining Qty." := 0;
+                    recPostedLotTracking."Moisture (%)" := recSourceLotEntry."Moisture (%)";
+                    recPostedLotTracking."Color (MM)" := recSourceLotEntry."Color (MM)";
+                    recPostedLotTracking."HMF (PPM)" := recSourceLotEntry."HMF (PPM)";
+                    recPostedLotTracking.TRS := recSourceLotEntry.TRS;
+                    recPostedLotTracking.Sucrose := recSourceLotEntry.Sucrose;
+                    recPostedLotTracking.FG := recSourceLotEntry.FG;
+                    recPostedLotTracking.Positive := FALSE;
+                    recPostedLotTracking."Ref. Entry No." := recSourceLotEntry."Entry No.";
+                    recPostedLotTracking."Posting Date" := NewItemLedgEntry."Posting Date";
+                    recPostedLotTracking.INSERT;
+
+                    recLotTracking.DELETE;
+                UNTIL recLotTracking.NEXT = 0;
+        END ELSE
+            IF (NewItemLedgEntry."Entry Type" = NewItemLedgEntry."Entry Type"::Transfer) AND (NewItemLedgEntry."Order No." = '') THEN BEGIN
+                recPostedLotTracking.RESET;
+                IF recPostedLotTracking.FINDLAST THEN
+                    intEntryNo := recPostedLotTracking."Entry No."
+                ELSE
+                    intEntryNo := 0;
+
+                recLotTracking.RESET;
+                recLotTracking.SETCURRENTKEY("Document No.", "Document Line No.", "Item No.", "Lot No.");
+                recLotTracking.SETRANGE("Document Type", recLotTracking."Document Type"::Transfer);
+                recLotTracking.SETRANGE("Document No.", NewItemLedgEntry."Document No.");
+                //recLotTracking.SETRANGE("Document Line No.", NewItemLedgEntry."Order Line No.");
+                recLotTracking.SETRANGE("Item No.", NewItemLedgEntry."Item No.");
+                recLotTracking.SETRANGE("Lot No.", NewItemLedgEntry."Lot No.");
+                IF recLotTracking.FINDFIRST THEN
+                    REPEAT
+                        recSourceLotEntry.GET(recLotTracking."Ref. Entry No.");
+                        recSourceLotEntry."Remaining Qty." := recSourceLotEntry."Remaining Qty." - recLotTracking.Quantity;
+                        recSourceLotEntry.MODIFY;
+
+                        recPostedLotTracking.INIT;
+                        intEntryNo += 1;
+                        recPostedLotTracking."Entry No." := intEntryNo;
+                        recPostedLotTracking."Item No." := recLotTracking."Item No.";
+                        recPostedLotTracking."Lot No." := recLotTracking."Lot No.";
+                        recPostedLotTracking.Flora := recLotTracking.Flora;
+                        //  recPostedLotTracking."Packing Type" := recLotTracking."Packing Type";
+                        recPostedLotTracking.Tin := recLotTracking.Tin;
+                        recPostedLotTracking.Drum := recLotTracking.Drum;
+                        recPostedLotTracking.Can := recLotTracking.Can;
+                        recPostedLotTracking.Bucket := recLotTracking.Bucket;
+                        recPostedLotTracking."Qty. In Packs" := -recLotTracking."Qty. In Packs";
+                        recPostedLotTracking.Quantity := -recLotTracking.Quantity;
+                        recPostedLotTracking."Average Qty. In Pack" := recLotTracking."Average Qty. In Pack";
+                        recPostedLotTracking."Document No." := recLotTracking."Document No.";
+                        recPostedLotTracking."Document Line No." := recLotTracking."Document Line No.";
+                        recPostedLotTracking."Location Code" := recLotTracking."Location Code";
+                        recPostedLotTracking."Remaining Qty." := 0;
+                        recPostedLotTracking."Moisture (%)" := recSourceLotEntry."Moisture (%)";
+                        recPostedLotTracking."Color (MM)" := recSourceLotEntry."Color (MM)";
+                        recPostedLotTracking."HMF (PPM)" := recSourceLotEntry."HMF (PPM)";
+                        recPostedLotTracking.TRS := recSourceLotEntry.TRS;
+                        recPostedLotTracking.Sucrose := recSourceLotEntry.Sucrose;
+                        recPostedLotTracking.FG := recSourceLotEntry.FG;
+                        recPostedLotTracking.Positive := FALSE;
+                        recPostedLotTracking."Ref. Entry No." := recSourceLotEntry."Entry No.";
+                        recPostedLotTracking."Posting Date" := NewItemLedgEntry."Posting Date";
+                        recPostedLotTracking.INSERT;
+
+                        recPostedLotTracking.INIT;
+                        intEntryNo += 1;
+                        recPostedLotTracking."Entry No." := intEntryNo;
+                        recPostedLotTracking."Item No." := recLotTracking."Item No.";
+                        recPostedLotTracking."Lot No." := recLotTracking."Lot No.";
+                        recPostedLotTracking.Flora := recLotTracking.Flora;
+                        // recPostedLotTracking."Packing Type" := recLotTracking."Packing Type";
+                        recPostedLotTracking.Tin := recLotTracking.Tin;
+                        recPostedLotTracking.Drum := recLotTracking.Drum;
+                        recPostedLotTracking.Can := recLotTracking.Can;
+                        recPostedLotTracking.Bucket := recLotTracking.Bucket;
+                        recPostedLotTracking."Qty. In Packs" := recLotTracking."Qty. In Packs";
+                        recPostedLotTracking.Quantity := recLotTracking.Quantity;
+                        recPostedLotTracking."Average Qty. In Pack" := recLotTracking."Average Qty. In Pack";
+                        recPostedLotTracking."Document No." := recLotTracking."Document No.";
+                        recPostedLotTracking."Document Line No." := recLotTracking."Document Line No.";
+                        recPostedLotTracking."Location Code" := ItemJournalLine."New Location Code";
+                        recPostedLotTracking."Remaining Qty." := recLotTracking.Quantity;
+                        recPostedLotTracking."Moisture (%)" := recSourceLotEntry."Moisture (%)";
+                        recPostedLotTracking."Color (MM)" := recSourceLotEntry."Color (MM)";
+                        recPostedLotTracking."HMF (PPM)" := recSourceLotEntry."HMF (PPM)";
+                        recPostedLotTracking.TRS := recSourceLotEntry.TRS;
+                        recPostedLotTracking.Sucrose := recSourceLotEntry.Sucrose;
+                        recPostedLotTracking.FG := recSourceLotEntry.FG;
+                        recPostedLotTracking.Positive := TRUE;
+                        recPostedLotTracking."Ref. Entry No." := intEntryNo;
+                        recPostedLotTracking."Posting Date" := NewItemLedgEntry."Posting Date";
+                        recPostedLotTracking.INSERT;
+
+                        recLotTracking.DELETE;
+                    UNTIL recLotTracking.NEXT = 0;
+            END;
+
+        NewItemLedgEntry."Output for Customer" := ItemJournalLine."Output for Customer";
+
+        //Iappc - 16 Jan 16 - Deals Details Begin
+        NewItemLedgEntry."Deal No." := ItemJournalLine."Deal No.";
+        NewItemLedgEntry."Deal Line No." := ItemJournalLine."Deal Line No.";
+        NewItemLedgEntry."Dispatched Qty. in Kg." := ItemJournalLine."Dispatched Qty. in Kg.";
+        NewItemLedgEntry.Flora := ItemJournalLine.Flora;
+        NewItemLedgEntry."Moisture (%)" := ItemJournalLine."Moisture (%)";
+        NewItemLedgEntry."Color (MM)" := ItemJournalLine."Color (MM)";
+        NewItemLedgEntry."HMF (PPM)" := ItemJournalLine."HMF (PPM)";
+        NewItemLedgEntry.TRS := ItemJournalLine.TRS;
+        NewItemLedgEntry.Sucrose := ItemJournalLine.Sucrose;
+        NewItemLedgEntry.FG := ItemJournalLine.FG;
+        NewItemLedgEntry."Vehicle No." := ItemJournalLine."Vehicle No.";
+        NewItemLedgEntry."Purchaser Code" := ItemJournalLine."Purchaser Code";
+        NewItemLedgEntry."Purchaser Name" := ItemJournalLine."Purchaser Name";
+        //Iappc - 16 Jan 16 - Deals Details End
+        //<<
     end;
 
     [EventSubscriber(ObjectType::Codeunit, Codeunit::"Item Jnl.-Post Line", 'OnBeforeInsertSetupTempSplitItemJnlLine', '', false, false)]
@@ -70,7 +458,150 @@ codeunit 50000 Tble83
         TempItemJournalLine.Bucket := TempTrackingSpecification.Bucket;
         TempItemJournalLine.Can := TempTrackingSpecification.Can;
     end;
+
+    [EventSubscriber(ObjectType::Codeunit, Codeunit::"Item Jnl.-Post Line", 'OnInsertTransferEntryOnTransferValues', '', false, false)]
+    local procedure OnInsertTransferEntryOnTransferValues(var NewItemLedgerEntry: Record "Item Ledger Entry"; OldItemLedgerEntry: Record "Item Ledger Entry"; ItemLedgerEntry: Record "Item Ledger Entry"; ItemJournalLine: Record "Item Journal Line"; var TempItemEntryRelation: Record "Item Entry Relation"; var IsHandled: Boolean)
+    begin
+        IF NewItemLedgerEntry.Quantity < 0 THEN
+            NewItemLedgerEntry."Qty. in Pack" := -ABS(NewItemLedgerEntry."Qty. in Pack")
+        ELSE
+            NewItemLedgerEntry."Qty. in Pack" := ABS(NewItemLedgerEntry."Qty. in Pack");
+    end;
+
     // Codeunit22 End
+
+    //Codeunit23
+
+    [EventSubscriber(ObjectType::Codeunit, Codeunit::"Item Jnl.-Post Batch", 'OnAfterPostJnlLines', '', false, false)]
+    local procedure OnAfterPostJnlLines(var ItemJournalBatch: Record "Item Journal Batch"; var ItemJournalLine: Record "Item Journal Line"; ItemRegNo: Integer; WhseRegNo: Integer; var WindowIsOpen: Boolean)
+    var
+        recItemJournal: Record "Item Journal Line";
+        InvtSetup: Record "Inventory Setup";
+    begin
+        recItemJournal.RESET;
+        recItemJournal.SETRANGE("Journal Template Name", InvtSetup."Auto Item Journal Template");
+        recItemJournal.SETRANGE("Journal Batch Name", InvtSetup."Auto Item Journal Batch");
+        recItemJournal.SETRANGE("ByProduct Entry", TRUE);
+        IF recItemJournal.FINDFIRST THEN
+            CODEUNIT.RUN(CODEUNIT::"Item Jnl.-Post", recItemJournal);
+    end;
+
+    [EventSubscriber(ObjectType::Codeunit, Codeunit::"Item Jnl.-Post Batch", 'OnPostLinesOnBeforePostLine', '', false, false)]
+    local procedure OnPostLinesOnBeforePostLine(var ItemJournalLine: Record "Item Journal Line"; var SuppressCommit: Boolean; var WindowIsOpen: Boolean)
+    var
+        recUserSetup: Record "User Setup";
+        recConsumptionDetails: Record "Job WIP Entry";
+        recBatchProcessLines: Record "Batch Process Line";
+        recReservationEntry: Record "Reservation Entry";
+        intLineNo: Integer;
+    begin
+        recUserSetup.GET(USERID);
+        //Scrap Generation Process
+        IF (ItemJournalLine."Entry Type" = ItemJournalLine."Entry Type"::Output) AND (ItemJournalLine."ByProduct Item Code" <> '') AND
+                                                                             (ItemJournalLine."ByProduct Qty." <> 0) AND (recUserSetup."Post ByProduct Entry" = TRUE) THEN
+            GenerateScrapEntry(ItemJournalLine."Document No.", ItemJournalLine."Posting Date", ItemJournalLine."ByProduct Item Code", ItemJournalLine."Location Code", ItemJournalLine."Shortcut Dimension 1 Code",
+                               ItemJournalLine."Shortcut Dimension 2 Code", ItemJournalLine."Dimension Set ID", ItemJournalLine."ByProduct Qty.", ItemJournalLine."Order Line No.", ItemJournalLine."No.");
+        //Scrap Generation Process
+
+        //Plan Weight Register Begin
+        IF (ItemJournalLine."Entry Type" = ItemJournalLine."Entry Type"::Consumption) THEN BEGIN
+            //Consumption Details Begin
+            recConsumptionDetails.RESET;
+            recConsumptionDetails.SETRANGE(Template, ItemJournalLine."Journal Template Name");
+            recConsumptionDetails.SETRANGE(Batch, ItemJournalLine."Journal Batch Name");
+            recConsumptionDetails.SETRANGE("Line No.", ItemJournalLine."Line No.");
+            IF recConsumptionDetails.FINDFIRST THEN begin
+                REPEAT
+                    recConsumptionDetails."Document No." := ItemJournalLine."Document No.";
+                    recConsumptionDetails.MODIFY;
+                UNTIL recConsumptionDetails.NEXT = 0;
+            end;
+            //Consumption Details End
+
+            recBatchProcessLines.RESET;
+            recBatchProcessLines.SETRANGE(Type, recBatchProcessLines.Type::"Weighing Register");
+            recBatchProcessLines.SETRANGE("Document No.", ItemJournalLine."Document No.");
+            IF recBatchProcessLines.FINDLAST THEN
+                intLineNo := recBatchProcessLines."Line No."
+            ELSE
+                intLineNo := 0;
+
+            recReservationEntry.RESET;
+            recReservationEntry.SETRANGE("Item No.", ItemJournalLine."Item No.");
+            recReservationEntry.SETRANGE("Location Code", ItemJournalLine."Location Code");
+            recReservationEntry.SETRANGE("Source Type", 83);
+            recReservationEntry.SETRANGE("Source Subtype", 5);
+            recReservationEntry.SETRANGE("Source ID", ItemJournalLine."Journal Template Name");
+            recReservationEntry.SETRANGE("Source Batch Name", ItemJournalLine."Journal Batch Name");
+            recReservationEntry.SETRANGE("Source Ref. No.", ItemJournalLine."Line No.");
+            IF recReservationEntry.FINDFIRST THEN
+                REPEAT
+                    recBatchProcessLines.RESET;
+                    recBatchProcessLines.SETRANGE(Type, recBatchProcessLines.Type::"Weighing Register");
+                    recBatchProcessLines.SETRANGE("Document No.", ItemJournalLine."Document No.");
+                    recBatchProcessLines.SETRANGE("Lot No.", recReservationEntry."Lot No.");
+                    IF recBatchProcessLines.FINDFIRST THEN BEGIN
+                        recBatchProcessLines."Tare Weight" += recReservationEntry."Tare Weight";
+                        recBatchProcessLines."Nett Weight" += ABS(recReservationEntry."Quantity (Base)");
+                        recBatchProcessLines."Gross Weight" := recBatchProcessLines."Tare Weight" + recBatchProcessLines."Nett Weight";
+                        recBatchProcessLines.MODIFY;
+                    END ELSE BEGIN
+                        recBatchProcessLines.INIT;
+                        recBatchProcessLines.Type := recBatchProcessLines.Type::"Weighing Register";
+                        recBatchProcessLines."Document No." := ItemJournalLine."Document No.";
+                        intLineNo += 10000;
+                        recBatchProcessLines."Line No." := intLineNo;
+                        recBatchProcessLines."Lot No." := recReservationEntry."Lot No.";
+                        recBatchProcessLines."Packing Qauntity" := recReservationEntry."Qty. in Pack";
+                        recBatchProcessLines."Tare Weight" := recReservationEntry."Tare Weight";
+                        recBatchProcessLines."Nett Weight" := ABS(recReservationEntry."Quantity (Base)");
+                        recBatchProcessLines."Packing Type" := recReservationEntry."Packing Type".AsInteger();
+                        recBatchProcessLines."Qty. Per Pack" := recReservationEntry."Qty. Per Pack";
+                        recBatchProcessLines."Gross Weight" := recBatchProcessLines."Tare Weight" + recBatchProcessLines."Nett Weight";
+                        recBatchProcessLines.INSERT;
+                    END;
+                UNTIL recReservationEntry.NEXT = 0;
+        END;
+        //Plan Weight Register End
+    end;
+
+    local procedure GenerateScrapEntry(DocumentNo: Code[20]; PostingDate: Date; ScrapItem: Code[20]; ScrapLocation: Code[20]; GD1: Code[20]; GD2: Code[20]; DimSetID: Integer; ScrapQty: Decimal; ProdOrderLineNo: Integer; MachineCenterNo: Code[20])
+    var
+        recItemJournal: Record "Item Journal Line";
+        intLineNo: Integer;
+        InvtSetup: Record "Inventory Setup";
+    begin
+        InvtSetup.GET;
+        InvtSetup.TESTFIELD("Auto Item Journal Template");
+        InvtSetup.TESTFIELD("Auto Item Journal Batch");
+
+        recItemJournal.RESET;
+        recItemJournal.SETRANGE("Journal Template Name", InvtSetup."Auto Item Journal Template");
+        recItemJournal.SETRANGE("Journal Batch Name", InvtSetup."Auto Item Journal Batch");
+        IF recItemJournal.FINDLAST THEN
+            intLineNo := recItemJournal."Line No.";
+
+        recItemJournal.INIT;
+        recItemJournal.VALIDATE("Journal Template Name", InvtSetup."Auto Item Journal Template");
+        recItemJournal.VALIDATE("Journal Batch Name", InvtSetup."Auto Item Journal Batch");
+        intLineNo += 10000;
+        recItemJournal.VALIDATE("Line No.", intLineNo);
+        recItemJournal.VALIDATE("Entry Type", recItemJournal."Entry Type"::"Positive Adjmt.");
+        recItemJournal.VALIDATE("Document No.", DocumentNo);
+        recItemJournal.VALIDATE("Posting Date", PostingDate);
+        recItemJournal.VALIDATE("Item No.", ScrapItem);
+        recItemJournal.VALIDATE("Location Code", ScrapLocation);
+        recItemJournal.VALIDATE("Shortcut Dimension 1 Code", GD1);
+        recItemJournal.VALIDATE("Shortcut Dimension 2 Code", GD2);
+        recItemJournal.VALIDATE(Quantity, ScrapQty);
+        recItemJournal."Dimension Set ID" := DimSetID;
+        recItemJournal."Temp Message Control" := TRUE;
+        recItemJournal."ByProduct Entry" := TRUE;
+        recItemJournal."Prod. Order Line No." := ProdOrderLineNo;
+        recItemJournal."Machine Center No." := MachineCenterNo;
+        recItemJournal.INSERT(TRUE);
+    end;
+    //Codeunit23
 
     // Codeunit90 Start
     [EventSubscriber(ObjectType::Codeunit, Codeunit::"Purch.-Post", 'OnAfterPurchInvLineInsert', '', false, false)]
@@ -167,6 +698,54 @@ codeunit 50000 Tble83
         //Iappc - 23 Jan 16 - Beekeeper Accounting End
     end;
 
+    [EventSubscriber(ObjectType::Codeunit, Codeunit::"Purch.-Post", 'OnBeforePurchRcptLineInsert', '', false, false)]
+    local procedure OnBeforePurchRcptLineInsert(var PurchRcptLine: Record "Purch. Rcpt. Line"; var PurchRcptHeader: Record "Purch. Rcpt. Header"; var PurchLine: Record "Purchase Line"; CommitIsSupressed: Boolean; PostedWhseRcptLine: Record "Posted Whse. Receipt Line"; var IsHandled: Boolean)
+    var
+        recLotTracking: Record "Tran. Lot Tracking";
+        recPostedLotTracking: Record "Lot Tracking Entry";
+        intEntryNo: Integer;
+        recItemCategory: Record "Item Category";
+        PurchHeader: Record "Purchase Header";
+    begin
+
+        //- QC Control Process Begin
+        IF recItemCategory.GET(PurchRcptLine."Item Category Code") THEN BEGIN
+            IF NOT recItemCategory."Inward QC Required" THEN
+                PurchRcptLine."QC Completed" := TRUE;
+        END;
+        //- QC Control Process End
+
+        //- Lot Tracking
+        recPostedLotTracking.RESET;
+        IF recPostedLotTracking.FINDLAST THEN
+            intEntryNo := recPostedLotTracking."Entry No."
+        ELSE
+            intEntryNo := 0;
+
+        PurchHeader.Get(PurchLine."Document Type", PurchLine."Document No.");
+
+        recLotTracking.RESET;
+        recLotTracking.SETRANGE("Document No.", PurchHeader."No.");
+        recLotTracking.SETRANGE("Document Line No.", PurchRcptLine."Line No.");
+        recLotTracking.SETRANGE("Item No.", PurchRcptLine."No.");
+        IF recLotTracking.FINDFIRST THEN
+            REPEAT
+                recPostedLotTracking.INIT;
+                recPostedLotTracking.TRANSFERFIELDS(recLotTracking);
+                intEntryNo += 1;
+                recPostedLotTracking."Entry No." := intEntryNo;
+                recPostedLotTracking."Document No." := PurchRcptHeader."No.";
+                recPostedLotTracking."Remaining Qty." := recLotTracking.Quantity;
+                recPostedLotTracking.Positive := TRUE;
+                recPostedLotTracking."Ref. Entry No." := intEntryNo;
+                recPostedLotTracking."Posting Date" := PurchRcptLine."Posting Date";
+                recPostedLotTracking.INSERT;
+
+                recLotTracking.DELETE;
+            UNTIL recLotTracking.NEXT = 0;
+        //- Lot Tracking
+    end;
+
     // Codeunit90 End
 
     // Codeunit91 Start
@@ -201,6 +780,9 @@ codeunit 50000 Tble83
         Rec_PurchaseSetup: Record "Purchases & Payables Setup";
         Rec_DealDispatch: Record "Deal Dispatch Details";
         Rec_DealCard: Record "Deal Master";
+        recReservationEntry: Record "Reservation Entry";
+        intEntryNo: Integer;
+        recLotTracking: Record "Tran. Lot Tracking";
     begin
         Rec_UserSetup.GET(USERID);
         IF PurchaseHeader."Document Type" IN [PurchaseHeader."Document Type"::Invoice, PurchaseHeader."Document Type"::"Credit Memo"] THEN BEGIN
@@ -241,6 +823,74 @@ codeunit 50000 Tble83
                 UNTIL Rec_PurchLine.NEXT = 0;
         END;
         //Iappc - 12 Jan 16 - Honey Price Validation End
+
+
+        IF (PurchaseHeader."Document Type" = PurchaseHeader."Document Type"::Order) AND (PurchaseHeader."Order Type" = PurchaseHeader."Order Type"::Honey) THEN BEGIN
+            Rec_PurchLine.RESET;
+            Rec_PurchLine.SETRANGE("Document Type", PurchaseHeader."Document Type");
+            Rec_PurchLine.SETRANGE("Document No.", PurchaseHeader."No.");
+            IF Rec_PurchLine.FINDFIRST THEN
+                REPEAT
+
+                    Rec_PurchLine.TESTFIELD(Type, Rec_PurchLine.Type::Item);
+                    Rec_PurchLine.TESTFIELD("No.");
+                    Rec_PurchLine.TESTFIELD("Location Code");
+                    Rec_PurchLine.TESTFIELD(Quantity);
+                    Rec_PurchLine.TESTFIELD("Deal No.");
+                    Rec_PurchLine.TESTFIELD("Packing Type");
+                    Rec_PurchLine.TESTFIELD("Qty. in Pack");
+
+                    recReservationEntry.RESET;
+                    IF recReservationEntry.FINDLAST THEN
+                        intEntryNo := recReservationEntry."Entry No."
+                    ELSE
+                        intEntryNo := 0;
+
+                    //Iappc - 12 Mar 17 - Create ItemTracking
+                    recLotTracking.RESET;
+                    recLotTracking.SETRANGE("Document No.", Rec_PurchLine."Document No.");
+                    recLotTracking.SETRANGE("Document Line No.", Rec_PurchLine."Line No.");
+                    recLotTracking.SETRANGE("Item No.", Rec_PurchLine."No.");
+                    IF recLotTracking.FINDFIRST THEN BEGIN
+                        recReservationEntry.RESET;
+                        recReservationEntry.SETRANGE("Source Type", 39);
+                        recReservationEntry.SETRANGE("Source Subtype", 1);
+                        recReservationEntry.SETRANGE("Source ID", Rec_PurchLine."Document No.");
+                        recReservationEntry.SETRANGE("Source Ref. No.", Rec_PurchLine."Line No.");
+                        //recReservationEntry.SETRANGE("Lot No.", recLotTracking."Lot No.");
+                        IF recReservationEntry.FINDFIRST THEN
+                            recReservationEntry.DELETEALL;
+
+                        REPEAT
+                            recReservationEntry.INIT;
+                            intEntryNo += 1;
+                            recReservationEntry."Entry No." := intEntryNo;
+                            recReservationEntry.Positive := TRUE;
+                            recReservationEntry."Item No." := Rec_PurchLine."No.";
+                            recReservationEntry."Location Code" := Rec_PurchLine."Location Code";
+                            recReservationEntry."Quantity (Base)" := recLotTracking.Quantity;
+                            recReservationEntry."Reservation Status" := recReservationEntry."Reservation Status"::Surplus;
+                            recReservationEntry."Creation Date" := TODAY;
+                            recReservationEntry."Source Type" := 39;
+                            recReservationEntry."Source Subtype" := 1;
+                            recReservationEntry."Source ID" := Rec_PurchLine."Document No.";
+                            recReservationEntry."Source Ref. No." := Rec_PurchLine."Line No.";
+                            recReservationEntry."Expected Receipt Date" := TODAY;
+                            recReservationEntry."Created By" := USERID;
+                            recReservationEntry."Qty. per Unit of Measure" := 1;
+                            recReservationEntry.Quantity := recLotTracking.Quantity;
+                            recReservationEntry."Qty. to Handle (Base)" := recLotTracking.Quantity;
+                            recReservationEntry."Qty. to Invoice (Base)" := recLotTracking.Quantity;
+                            recReservationEntry."Lot No." := recLotTracking."Lot No.";
+                            recReservationEntry."Item Tracking" := recReservationEntry."Item Tracking"::"Lot No.";
+                            recReservationEntry.INSERT;
+                        UNTIL recLotTracking.NEXT = 0;
+                    END;
+                //Iappc - 12 Mar 17 - Create ItemTracking
+
+                UNTIL Rec_PurchLine.NEXT = 0;
+        END;
+        //Iappc - GAN Validation Begin
     end;
 
     [EventSubscriber(ObjectType::Codeunit, Codeunit::"Purch.-Post (Yes/No)", 'OnBeforeSelectPostOrderOption', '', false, false)]
@@ -259,6 +909,236 @@ codeunit 50000 Tble83
     end;
 
     // Codeunit91 End
+
+    //Codeunit241
+
+    [EventSubscriber(ObjectType::Codeunit, Codeunit::"Item Jnl.-Post", 'OnBeforeCode', '', false, false)]
+    local procedure OnBeforeCode(var ItemJournalLine: Record "Item Journal Line"; var HideDialog: Boolean; var SuppressCommit: Boolean; var IsHandled: Boolean)
+    var
+        recUserSetup: Record "User Setup";
+        recItemJournal: Record "Item Journal Line";
+        recProdOrderComponent: Record "Prod. Order Component";
+        decOutputQty: Decimal;
+        blnFirstLine: Boolean;
+        recProdOrderLine: Record "Prod. Order Line";
+        recProductionOrder: Record "Production Order";
+        recReservationEntry: Record "Reservation Entry";
+        intEntryNo: Integer;
+        recLotTracking: Record "Tran. Lot Tracking";
+        decTotalQty: Decimal;
+
+    begin
+        //User Permission Management
+        recUserSetup.GET(USERID);
+        IF NOT recUserSetup."Allow Item Journal Posting" THEN
+            ERROR('You are not authorized to post item journal voucher.');
+        // - User Permission Management
+
+        //Iappc - Output Validation begin
+        recItemJournal.COPY(ItemJournalLine);
+        IF recItemJournal.FINDFIRST THEN
+            REPEAT
+                IF recItemJournal."Entry Type" = recItemJournal."Entry Type"::Output THEN BEGIN
+                    recProdOrderComponent.RESET;
+                    recProdOrderComponent.SETRANGE(Status, recProdOrderComponent.Status::Released);
+                    recProdOrderComponent.SETRANGE("Prod. Order No.", recItemJournal."Order No.");
+                    recProdOrderComponent.SETRANGE("Prod. Order Line No.", recItemJournal."Order Line No.");
+                    IF recProdOrderComponent.FINDFIRST THEN BEGIN
+                        decOutputQty := 0;
+                        blnFirstLine := FALSE;
+                        REPEAT
+                            recProdOrderComponent.CALCFIELDS("Consumed Qty.");
+                            recProductionOrder.GET(recProdOrderComponent.Status, recProdOrderComponent."Prod. Order No.");
+                            IF recProductionOrder."Order Type" = recProductionOrder."Order Type"::Packing THEN BEGIN
+                                IF NOT blnFirstLine THEN
+                                    decOutputQty := ROUND(recProdOrderComponent."Consumed Qty." / recProdOrderComponent."Quantity per", 0.01)
+                                ELSE
+                                    IF decOutputQty > ROUND(recProdOrderComponent."Consumed Qty." / recProdOrderComponent."Quantity per", 0.01) THEN
+                                        decOutputQty := ROUND(recProdOrderComponent."Consumed Qty." / recProdOrderComponent."Quantity per", 0.01);
+
+                            END ELSE BEGIN
+                                decOutputQty += ROUND(recProdOrderComponent."Consumed Qty." / recProdOrderComponent."Quantity per", 0.01);
+                            END;
+
+                            blnFirstLine := TRUE;
+                        UNTIL recProdOrderComponent.NEXT = 0;
+                    END ELSE
+                        ERROR('There is no component lines for the production order.');
+
+                    recProdOrderLine.GET(recProdOrderLine.Status::Released, recItemJournal."Order No.", recItemJournal."Order Line No.");
+                    decOutputQty := decOutputQty - recProdOrderLine."Finished Quantity";
+                    IF recItemJournal."Output Quantity" > decOutputQty THEN
+                        ERROR('Can not post more than %1 output, due to consumption shortage.', decOutputQty);
+                END ELSE
+                    IF recItemJournal."Entry Type" = recItemJournal."Entry Type"::Transfer THEN BEGIN
+                        recItemJournal.TESTFIELD("Item No.");
+                        recItemJournal.TESTFIELD(Quantity);
+
+                        recReservationEntry.RESET;
+                        IF recReservationEntry.FINDLAST THEN
+                            intEntryNo := recReservationEntry."Entry No."
+                        ELSE
+                            intEntryNo := 0;
+
+                        decTotalQty := recItemJournal.Quantity;
+                        recLotTracking.RESET;
+                        recLotTracking.SETRANGE("Document No.", recItemJournal."Document No.");
+                        recLotTracking.SETRANGE("Document Line No.", recItemJournal."Line No.");
+                        recLotTracking.SETRANGE("Item No.", recItemJournal."Item No.");
+                        IF recLotTracking.FINDFIRST THEN BEGIN
+                            recReservationEntry.RESET;
+                            recReservationEntry.SETRANGE("Source Type", 83);
+                            recReservationEntry.SETRANGE("Source Subtype", 4);
+                            recReservationEntry.SETRANGE("Source ID", recItemJournal."Journal Template Name");
+                            recReservationEntry.SETRANGE("Source Batch Name", recItemJournal."Journal Batch Name");
+                            recReservationEntry.SETRANGE("Source Ref. No.", recItemJournal."Line No.");
+                            recReservationEntry.SETRANGE("Lot No.", recLotTracking."Lot No.");
+                            IF recReservationEntry.FINDFIRST THEN
+                                recReservationEntry.DELETEALL;
+
+                            REPEAT
+                                decTotalQty := decTotalQty - recLotTracking.Quantity;
+                                recReservationEntry.INIT;
+                                intEntryNo += 1;
+                                recReservationEntry."Entry No." := intEntryNo;
+                                recReservationEntry.Positive := FALSE;
+                                recReservationEntry."Item No." := recItemJournal."Item No.";
+                                recReservationEntry."Location Code" := recItemJournal."Location Code";
+                                recReservationEntry.VALIDATE("Quantity (Base)", -recLotTracking.Quantity);
+                                recReservationEntry."Reservation Status" := recReservationEntry."Reservation Status"::Prospect;
+                                recReservationEntry."Creation Date" := TODAY;
+                                recReservationEntry."Source Type" := 83;
+                                recReservationEntry."Source Subtype" := 4;
+                                recReservationEntry."Source ID" := recItemJournal."Journal Template Name";
+                                recReservationEntry."Source Batch Name" := recItemJournal."Journal Batch Name";
+                                recReservationEntry."Source Ref. No." := recItemJournal."Line No.";
+                                //recReservationEntry."Appl.-to Item Entry" := recItemLedger."Entry No.";
+                                recReservationEntry."Lot No." := recLotTracking."Lot No.";
+                                recReservationEntry."New Lot No." := recLotTracking."Lot No.";
+                                recReservationEntry."New Expiration Date" := TODAY;
+                                recReservationEntry."Item Tracking" := recReservationEntry."Item Tracking"::"Lot No.";
+                                recReservationEntry."Created By" := USERID;
+                                recReservationEntry."Qty. per Unit of Measure" := 1;
+                                recReservationEntry.Binding := recReservationEntry.Binding::" ";
+                                recReservationEntry."Suppressed Action Msg." := FALSE;
+                                recReservationEntry."Planning Flexibility" := recReservationEntry."Planning Flexibility"::Unlimited;
+                                recReservationEntry."Quantity Invoiced (Base)" := 0;
+                                recReservationEntry.Correction := FALSE;
+                                recReservationEntry.INSERT;
+                            UNTIL recLotTracking.NEXT = 0;
+                            IF decTotalQty <> 0 THEN
+                                ERROR('In-sufficient lot tracking defined for item no. %1', recItemJournal."Item No.");
+                        END;
+                        //Create ItemTracking
+                    END;
+            UNTIL recItemJournal.NEXT = 0;
+        //Output Validation End
+    end;
+
+    [EventSubscriber(ObjectType::Codeunit, Codeunit::"Item Jnl.-Post", 'OnCodeOnAfterItemJnlPostBatchRun', '', false, false)]
+    local procedure OnCodeOnAfterItemJnlPostBatchRun(var ItemJournalLine: Record "Item Journal Line"; var HideDialog: Boolean; SuppressCommit: Boolean)
+    var
+        recItemLedger: Record "Item Ledger Entry";
+        intEntryNoToStart: Integer;
+        intNoEntryNoManage: Integer;
+        recItemApplication: Record "Item Application Entry";
+        recSourceItemLedger: Record "Item Ledger Entry";
+        decQtyInPack: Decimal;
+    begin
+
+        intNoEntryNoManage := 20;
+
+        recItemLedger.RESET;
+        IF recItemLedger.FINDLAST THEN BEGIN
+            intEntryNoToStart := recItemLedger."Entry No." - intNoEntryNoManage;
+
+            recItemLedger.RESET;
+            recItemLedger.SETRANGE("Entry No.", intEntryNoToStart, intEntryNoToStart + intNoEntryNoManage);
+            recItemLedger.FINDFIRST;
+            REPEAT
+                IF (recItemLedger."Packing Type" = 0) AND (recItemLedger."Entry Type" = recItemLedger."Entry Type"::Transfer) AND (recItemLedger."Order No." = '') THEN BEGIN
+                    IF recItemLedger.Positive THEN BEGIN
+                        recItemApplication.RESET;
+                        recItemApplication.SETCURRENTKEY("Inbound Item Entry No.", "Item Ledger Entry No.", "Outbound Item Entry No.", "Cost Application");
+                        recItemApplication.SETRANGE("Inbound Item Entry No.", recItemLedger."Entry No.");
+                        recItemApplication.SETRANGE("Item Ledger Entry No.", recItemLedger."Entry No.");
+                        recItemApplication.FINDFIRST;
+                        recSourceItemLedger.GET(recItemApplication."Transferred-from Entry No.");
+                        recItemLedger."Packing Type" := recSourceItemLedger."Packing Type";
+
+                        decQtyInPack := ROUND(recSourceItemLedger."Qty. in Pack" / recSourceItemLedger.Quantity * recItemLedger.Quantity, 1);
+                        recItemLedger."Qty. in Pack" := ABS(decQtyInPack);
+
+                        recItemLedger.Flora := recSourceItemLedger.Flora;
+                        recItemLedger."Tare Weight" := recSourceItemLedger."Tare Weight";
+                        recItemLedger.MODIFY;
+                    END ELSE BEGIN
+                        recItemApplication.RESET;
+                        recItemApplication.SETCURRENTKEY("Outbound Item Entry No.", "Item Ledger Entry No.", "Cost Application", "Transferred-from Entry No.");
+                        recItemApplication.SETRANGE("Outbound Item Entry No.", recItemLedger."Entry No.");
+                        recItemApplication.SETRANGE("Item Ledger Entry No.", recItemLedger."Entry No.");
+                        recItemApplication.FINDFIRST;
+                        recSourceItemLedger.GET(recItemApplication."Inbound Item Entry No.");
+                        recItemLedger."Packing Type" := recSourceItemLedger."Packing Type";
+
+                        decQtyInPack := ROUND(recSourceItemLedger."Qty. in Pack" / recSourceItemLedger.Quantity * recItemLedger.Quantity, 1);
+                        recItemLedger."Qty. in Pack" := -ABS(decQtyInPack);
+
+                        recItemLedger.Flora := recSourceItemLedger.Flora;
+                        recItemLedger."Tare Weight" := recSourceItemLedger."Tare Weight";
+                        recItemLedger.MODIFY;
+                    END;
+                END;
+            UNTIL recItemLedger.NEXT = 0;
+        END;
+    end;
+    //Codeunit241
+
+    //Codeunit5407
+
+    [EventSubscriber(ObjectType::Codeunit, Codeunit::"Prod. Order Status Management", 'OnAfterChangeStatusOnProdOrder', '', false, false)]
+    local procedure OnAfterChangeStatusOnProdOrder(var ProdOrder: Record "Production Order"; var ToProdOrder: Record "Production Order"; NewStatus: Enum "Production Order Status"; NewPostingDate: Date; NewUpdateUnitCost: Boolean; var SuppressCommit: Boolean)
+    var
+        recTranLotEntry: Record "Tran. Lot Tracking";
+    begin
+        //Unposted Lot Entry Deleteion
+        recTranLotEntry.RESET;
+        recTranLotEntry.SETRANGE("Document No.", ProdOrder."No.");
+        recTranLotEntry.SETRANGE("Document Type", recTranLotEntry."Document Type"::Consumption);
+        IF recTranLotEntry.FINDFIRST THEN
+            recTranLotEntry.DELETEALL;
+        //Unposted Lot Entry Deleteion
+    end;
+    //Codeunit5407
+
+    //Codeunit6501
+
+    [EventSubscriber(ObjectType::Codeunit, Codeunit::"Item Tracking Data Collection", 'OnAfterAssistEditTrackingNo', '', false, false)]
+    local procedure OnAfterAssistEditTrackingNo_(var TrackingSpecification: Record "Tracking Specification"; var TempGlobalEntrySummary: Record "Entry Summary" temporary; CurrentSignFactor: Integer; MaxQuantity: Decimal; var TempGlobalReservationEntry: Record "Reservation Entry" temporary; LookupMode: Enum "Item Tracking Type")
+    var
+        recItemLedger: Record "Item Ledger Entry";
+    begin
+
+        //Packing Update Begin
+        recItemLedger.RESET;
+        recItemLedger.SETCURRENTKEY("Item No.", Open, "Variant Code", Positive, "Location Code", "Posting Date", "Expiration Date", "Lot No.", "Serial No.");
+        //recItemLedger.SETRANGE("Entry Type", recItemLedger."Entry Type"::Purchase);
+        //recItemLedger.SETRANGE("Document Type", recItemLedger."Document Type"::"Purchase Receipt");
+        recItemLedger.SETRANGE("Item No.", TrackingSpecification."Item No.");
+        recItemLedger.SETRANGE("Lot No.", TrackingSpecification."Lot No.");
+        recItemLedger.SETRANGE(Positive, TRUE);
+        recItemLedger.SETRANGE(Open, TRUE);
+        IF recItemLedger.FINDFIRST THEN BEGIN
+            IF recItemLedger."Qty. in Pack" <> 0 THEN BEGIN
+                TrackingSpecification."Qty. in Pack" := ROUND(TrackingSpecification."Quantity (Base)" / (recItemLedger.Quantity / recItemLedger."Qty. in Pack"), 1);
+                TrackingSpecification."Original Qty. in Pack" := TrackingSpecification."Qty. in Pack";
+                TrackingSpecification."Packing Type" := recItemLedger."Packing Type";
+                TrackingSpecification."Qty. Per Pack" := ROUND(recItemLedger.Quantity / recItemLedger."Qty. in Pack", 1);
+            END;
+        END;
+        //Packing Update End
+    end;
+    //Codeunit6501
 
     // Table39 Start
     [EventSubscriber(ObjectType::Table, Database::"Purchase Line", 'OnValidateNoOnCopyFromTempPurchLine', '', false, false)]
@@ -692,8 +1572,9 @@ codeunit 50000 Tble83
   */
 
     //Table36 End
+
     //Codeunit825 Start
-    [EventSubscriber(ObjectType::Codeunit, 825, 'OnPostLedgerEntryOnBeforeGenJnlPostLine', '', false, false)]
+    [EventSubscriber(ObjectType::Codeunit, Codeunit::"Sales Post Invoice Events", 'OnPostLedgerEntryOnBeforeGenJnlPostLine', '', false, false)]
     local procedure OnPostLedgerEntryOnBeforeGenJnlPostLine(var GenJnlLine: Record "Gen. Journal Line"; var SalesHeader: Record "Sales Header"; var TotalSalesLine: Record "Sales Line"; var TotalSalesLineLCY: Record "Sales Line"; PreviewMode: Boolean; SuppressCommit: Boolean; var GenJnlPostLine: Codeunit "Gen. Jnl.-Post Line")
     var
         Rec_Customer: Record Customer;
@@ -703,7 +1584,7 @@ codeunit 50000 Tble83
     end;
     //Codeunit825 End
     //Table81 Start
-    [EventSubscriber(ObjectType::Table, 81, 'OnAfterCopyGenJnlLineFromSalesHeader', '', false, false)]
+    [EventSubscriber(ObjectType::Table, Database::"Gen. Journal Line", 'OnAfterCopyGenJnlLineFromSalesHeader', '', false, false)]
     local procedure OnAfterCopyGenJnlLineFromSalesHeader(SalesHeader: Record "Sales Header"; var GenJournalLine: Record "Gen. Journal Line")
     var
         Rec_Customer: Record Customer;
@@ -712,21 +1593,59 @@ codeunit 50000 Tble83
         GenJournalLine."Parent Group" := Rec_Customer."Parent Group";
     end;
 
-    [EventSubscriber(ObjectType::Table, 81, 'OnAfterAccountNoOnValidateGetCustomerAccount', '', false, false)]
+    [EventSubscriber(ObjectType::Table, Database::"Gen. Journal Line", 'OnAfterAccountNoOnValidateGetCustomerAccount', '', false, false)]
     local procedure OnAfterAccountNoOnValidateGetCustomerAccount(var GenJournalLine: Record "Gen. Journal Line"; var Customer: Record Customer; CallingFieldNo: Integer)
     begin
         GenJournalLine."Parent Group" := Customer."Parent Group";
     end;
 
-
-
     //Table81 End
 
     //Codeunit12 Start
-    [EventSubscriber(ObjectType::Codeunit, 12, 'OnAfterInitCustLedgEntry', '', false, false)]
+    [EventSubscriber(ObjectType::Codeunit, Codeunit::"Gen. Jnl.-Post Line", 'OnAfterInitCustLedgEntry', '', false, false)]
     local procedure OnAfterInitCustLedgEntry(var CustLedgerEntry: Record "Cust. Ledger Entry"; GenJournalLine: Record "Gen. Journal Line"; var GLRegister: Record "G/L Register")
     begin
         CustLedgerEntry."Parent Group" := GenJournalLine."Parent Group";
     end;
     //Codeunit12 End
+
+    //Table39 Start
+    [EventSubscriber(ObjectType::Table, 39, 'OnDeleteOnBeforeTestStatusOpen', '', false, false)]
+    local procedure OnDeleteOnBeforeTestStatusOpen(var PurchaseLine: Record "Purchase Line"; var IsHandled: Boolean)
+    var
+        DealDispatchDetails: Record "Deal Dispatch Details";
+    begin
+        DealDispatchDetails.Reset();
+        DealDispatchDetails.SetRange("Sauda No.", PurchaseLine."Deal No.");
+        DealDispatchDetails.SetRange("Line No.", PurchaseLine."Deal Line No.");
+        if DealDispatchDetails.FindFirst() then begin
+            DealDispatchDetails."GAN Created" := false;
+            DealDispatchDetails."GAN No." := '';
+            DealDispatchDetails.Modify();
+        end;
+
+    end;
+    //Table39 End
+
+    //Table18 Start
+    [EventSubscriber(ObjectType::Table, 18, 'OnAfterLookupPostCode', '', false, false)]
+    local procedure OnAfterLookupPostCode(var Customer: Record Customer; xCustomer: Record Customer; var PostCodeRec: Record "Post Code")
+    begin
+        PostCodeRec.SetRange(Code, Customer."Post Code");
+        PostCodeRec.SetRange(City, Customer.City);
+        if PostCodeRec.FindFirst() then begin
+            Customer.District := PostCodeRec.District;
+        end;
+    end;
+
+    [EventSubscriber(ObjectType::Table, 18, 'OnAfterLookupCity', '', false, false)]
+    local procedure OnAfterLookupCity(var Customer: Record Customer; var PostCodeRec: Record "Post Code")
+    begin
+        PostCodeRec.SetRange(Code, Customer."Post Code");
+        PostCodeRec.SetRange(City, Customer.City);
+        if PostCodeRec.FindFirst() then begin
+            Customer.District := PostCodeRec.District;
+        end;
+    end;
+    //Table18 End
 }

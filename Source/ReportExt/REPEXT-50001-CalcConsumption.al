@@ -1,10 +1,15 @@
 reportextension 50001 CalcConsumptionExt extends "Calc. Consumption"
 {
-
-
     dataset
     {
-        // Add changes to dataitems and columns here
+        modify("Production Order")
+        {
+            trigger OnBeforePreDataItem()
+            begin
+                IF cdOrderNo <> '' THEN
+                    "Production Order".SETRANGE("No.", cdOrderNo);
+            end;
+        }
     }
 
     requestpage
@@ -21,6 +26,4 @@ reportextension 50001 CalcConsumptionExt extends "Calc. Consumption"
         cdOrderNo := InputOrderNo;
         CalcBasedOn1 := InputCalcBasedOn;
     end;
-
-
 }

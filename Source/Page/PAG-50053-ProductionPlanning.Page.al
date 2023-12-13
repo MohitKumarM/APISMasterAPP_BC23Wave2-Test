@@ -22,18 +22,9 @@ page 50053 "Production Planning"
                 field(cdLocationCode; cdLocationCode)
                 {
                     Caption = 'Select Production Location';
-                    TableRelation = Location.Code where("Production Unit" = const(true));
-                    // TableRelation = Location WHERE(Code = FILTER('RRK-PR1' | 'RRK-PR2'));
-
-                    trigger OnValidate()
-                    begin
-                        // IF (STRPOS(cdLocationCode, 'RRK-PR1') = 0) AND (STRPOS(cdLocationCode, 'RRK-PR2') = 0) THEN
-                        //     ERROR('Invalid location, it must be RRK-PR1 or RRK-PR2');
-                    end;
+                    TableRelation = Location.Code where("Production Location" = const(true));
                 }
-                field("Plan Date"; dtPlanDate)
-                {
-                }
+                field("Plan Date"; dtPlanDate) { }
                 field("Production For"; ProductionFor)
                 {
                     Caption = 'Production For';
@@ -43,8 +34,11 @@ page 50053 "Production Planning"
                     begin
                         IF (ProductionFor = ProductionFor::Customer) then
                             ProductionForEnable := true
-                        else
+                        else begin
                             ProductionForEnable := false;
+                            Clear(cdCustomerCode);
+                            txtCustomerName := '';
+                        end;
                     end;
                 }
                 field(cdCustomerCode; cdCustomerCode)
@@ -76,33 +70,19 @@ page 50053 "Production Planning"
                 {
                     Caption = 'Production Type';
                 }
-                field(cdBulkItemNo; cdBulkItemNo)
+                field(ProductionSubType_Var; ProductionSubType_Var)
                 {
-                    Caption = 'Bulk Item No.';
-                    Visible = false;
+                    Caption = 'Production Sub type';
+                }
+                field(TradeType_Var; TradeType_Var)
+                {
+                    Caption = 'Trade Type';
+                }
 
-                    trigger OnLookup(var Text: Text): Boolean
-                    begin
-                        recItem.RESET;
-                        recItem.SETRANGE("New Product Group Code", 'BULK');
-                        //recItem.SETRANGE("Customer Code", cdCustomerCode);
-                        IF PAGE.RUNMODAL(0, recItem) = ACTION::LookupOK THEN BEGIN
-                            cdBulkItemNo := recItem."No.";
-                        END;
-                    end;
-                }
-                field(Moisture; txtQualityValues)
-                {
-                }
-                field(Color; txtColor)
-                {
-                }
-                field(FG; txtFG)
-                {
-                }
-                field(HMF; txtHMF)
-                {
-                }
+                field(Moisture; txtQualityValues) { }
+                field(Color; txtColor) { }
+                field(FG; txtFG) { }
+                field(HMF; txtHMF) { }
             }
             repeater(Group)
             {
@@ -111,9 +91,7 @@ page 50053 "Production Planning"
                 {
                     Editable = false;
                 }
-                field("Item Name"; Rec."Item Name")
-                {
-                }
+                field("Item Name"; Rec."Item Name") { }
                 field("Source Type"; Rec."Source Type")
                 {
                     Editable = false;
@@ -123,9 +101,7 @@ page 50053 "Production Planning"
                 {
                     Editable = false;
                 }
-                field("Customer Name"; Rec."Customer Name")
-                {
-                }
+                field("Customer Name"; Rec."Customer Name") { }
                 field(Quantity; Rec.Quantity)
                 {
                     Editable = false;
@@ -146,12 +122,8 @@ page 50053 "Production Planning"
                 {
                     Editable = false;
                 }
-                field("Packing Order Qty."; Rec."Packing Order Qty.")
-                {
-                }
-                field("Qty. to Pack"; Rec."Qty. to Pack")
-                {
-                }
+                field("Packing Order Qty."; Rec."Packing Order Qty.") { }
+                field("Qty. to Pack"; Rec."Qty. to Pack") { }
             }
         }
     }
@@ -174,7 +146,6 @@ page 50053 "Production Planning"
                         Error('Please Select a value for Production For Field on Page');
 
                     recManufacturingSetup.GET;
-                    recManufacturingSetup.TESTFIELD("Production Location");
                     recManufacturingSetup.TESTFIELD("Loose Honey Code");
 
                     IF decQtyToProduce = 0 THEN
@@ -189,58 +160,55 @@ page 50053 "Production Planning"
                     IF opProductionType = 0 THEN
                         ERROR('Select Production Type');
 
-                    recProductionOrder.RESET;
-                    recProductionOrder.SETRANGE(Status, recProductionOrder.Status::Released);
-                    recProductionOrder.SETRANGE(Refreshed, FALSE);
-                    IF recProductionOrder.FINDFIRST THEN
-                        ERROR('There are production orders to refresh, first refresh them manually.');
+                    // recProductionOrder.RESET;
+                    // recProductionOrder.SETRANGE(Status, recProductionOrder.Status::Released);
+                    // recProductionOrder.SETRANGE(Refreshed, FALSE);
+                    // IF recProductionOrder.FINDFIRST THEN
+                    //     ERROR('There are production orders to refresh, first refresh them manually.');
+
+                    if (cdLocationCode = '') then Error('Location is Blank');
+
+                    recRoutingHeader.RESET;
+                    recRoutingHeader.SETRANGE("Production Type", opProductionType);
+                    recRoutingHeader.SETRANGE("Auto Selection", TRUE);
+                    recRoutingHeader.SetRange(Status, recRoutingHeader.Status::Certified);
+                    recRoutingHeader.FINDFIRST;
+
 
                     recProductionOrder.INIT;
                     recProductionOrder.VALIDATE(Status, recProductionOrder.Status::Released);
                     recProductionOrder."No." := '';
                     recProductionOrder.INSERT(TRUE);
                     cdProdOrderCode := recProductionOrder."No.";
-
                     recProductionOrder.VALIDATE("Source Type", recProductionOrder."Source Type"::Item);
-
                     recProductionOrder.VALIDATE("Source No.", recManufacturingSetup."Loose Honey Code");
                     recProductionOrder.VALIDATE(Quantity, decQtyToProduce);
                     recProductionOrder.VALIDATE("Location Code", cdLocationCode);
                     IF cdCustomerCode <> '' THEN
                         recProductionOrder.VALIDATE("Customer Code", cdCustomerCode);
+
+                    IF dtPlanDate <> 0D THEN
+                        recProductionOrder."Creation Date" := dtPlanDate
+                    else
+                        recProductionOrder."Creation Date" := Today;
+
+                    recProductionOrder.VALIDATE("Routing No.", recRoutingHeader."No.");
                     recProductionOrder."Batch No." := dBatchNo;
                     recProductionOrder."Production Type" := opProductionType;
-                    IF dtPlanDate <> 0D THEN
-                        recProductionOrder."Creation Date" := dtPlanDate;
-
-                    recRoutingHeader.RESET;
-                    recRoutingHeader.SETRANGE("Production Type", opProductionType);
-                    recRoutingHeader.SETRANGE("Auto Selection", TRUE);
-                    recRoutingHeader.FINDFIRST;
-                    recProductionOrder.VALIDATE("Routing No.", recRoutingHeader."No.");
+                    recProductionOrder."Production Sub Type" := ProductionSubType_Var;
+                    recProductionOrder."Trade Type" := TradeType_Var;
                     recProductionOrder.Moisture := txtQualityValues;
                     recProductionOrder.Color := txtColor;
                     recProductionOrder.FG := txtFG;
-
                     recProductionOrder.HMF := txtHMF;
                     recProductionOrder.MODIFY(TRUE);
-                    COMMIT;
 
-                    recProductionOrder.RESET;
-                    recProductionOrder.SETRANGE(Status, recProductionOrder.Status::Released);
-                    recProductionOrder.SETRANGE(Refreshed, FALSE);
-                    IF recProductionOrder.FINDFIRST THEN
-                        REPEAT
+                    recProdOrderToRefresh.RESET;
+                    recProdOrderToRefresh.SETRANGE(Status, recProductionOrder.Status);
+                    recProdOrderToRefresh.SETRANGE("No.", cdProdOrderCode);
+                    recProdOrderToRefresh.FINDFIRST;
+                    REPORT.RUNMODAL(Report::"Refresh Production Order", FALSE, TRUE, recProdOrderToRefresh);
 
-                            recProdOrderToRefresh.RESET;
-                            recProdOrderToRefresh.SETRANGE(Status, recProductionOrder.Status);
-                            recProdOrderToRefresh.SETRANGE("No.", recProductionOrder."No.");
-                            recProdOrderToRefresh.FINDFIRST;
-                            COMMIT;
-
-                            REPORT.RUNMODAL(Report::"Refresh Production Order", FALSE, TRUE, recProdOrderToRefresh);
-                            COMMIT;
-                        UNTIL recProductionOrder.NEXT = 0;
 
                     MESSAGE('Production order %1 created.', cdProdOrderCode);
                     Clear(decQtyToProduce);
@@ -255,6 +223,8 @@ page 50053 "Production Planning"
                     Clear(txtColor);
                     Clear(txtFG);
                     Clear(txtHMF);
+                    Clear(TradeType_Var);
+                    Clear(ProductionSubType_Var);
                     CurrPage.Update();
                 end;
             }
@@ -287,8 +257,6 @@ page 50053 "Production Planning"
         decQtyToProduce: Decimal;
         cdLocationCode: Code[20];
         dBatchNo: Code[20];
-        recReservationEntry: Record "Reservation Entry";
-        intEntryNo: Integer;
         cdCustomerCode: Code[20];
         cdProdOrderCode: Code[20];
         opProductionType: Option " ","Bulk Without Filteration","Bulk With Filteration","Small Pack";
@@ -304,4 +272,6 @@ page 50053 "Production Planning"
         dtPlanDate: Date;
         ProductionFor: Option " ","In House",Customer;
         ProductionForEnable: Boolean;
+        TradeType_Var: Option " ","General Trade","Modern Trade";
+        ProductionSubType_Var: Option " ","FG Bulk Exp. w/o processing","FG Bulk Exp. w/o filter","FG Bulk Exp. Filtered","FG Small Exp. Filtered","FG Bulk Dom w/o filter","FG Bulk Dom Filter","FG Small Dom Filtered",Pouring;
 }

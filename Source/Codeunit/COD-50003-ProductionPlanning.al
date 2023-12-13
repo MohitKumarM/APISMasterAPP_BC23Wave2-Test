@@ -4,7 +4,6 @@ codeunit 50003 "Production Planning"
     begin
     end;
 
-    [Scope('Onprem')]
     procedure CalculateRequirement(FromDate: Date; ToDate: Date)
     var
         recSalesHeader: Record "Sales Header";
@@ -180,7 +179,6 @@ codeunit 50003 "Production Planning"
             UNTIL recPlanningLines.NEXT = 0;
     end;
 
-    [Scope('Onprem')]
     procedure CalculateProcurement(FromDate: Date; ToDate: Date)
     var
         recPlanningLines: Record "Item Budget Entry";

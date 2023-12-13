@@ -1,4 +1,4 @@
-page 50041 "GAN Approval Order"
+/* page 50041 "GAN Approval Order"
 {
     Caption = 'GAN Approval Order';
     DeleteAllowed = false;
@@ -34,9 +34,7 @@ page 50041 "GAN Approval Order"
                 {
                     ApplicationArea = All;
                 }
-                field("Waybill No."; Rec."Waybill No.")
-                {
-                }
+                field("Waybill No."; Rec."Waybill No.") { }
                 field("GR / LR No."; Rec."GR / LR No.")
                 {
                     ApplicationArea = All;
@@ -57,8 +55,26 @@ page 50041 "GAN Approval Order"
                 {
                     ApplicationArea = All;
                 }
-                field("Document Date"; Rec."Document Date")
+                field("Document Date"; Rec."Document Date") { }
+                field("Activity Name"; Rec."Activity Name")
                 {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the value of the Activity Name field.';
+                }
+                field("Activity City"; Rec."Activity City")
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the value of the Activity City field.';
+                }
+                field("Activity State"; Rec."Activity State")
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the value of the Activity State field.';
+                }
+                field("Sales Channel"; Rec."Sales Channel")
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the value of the Sales Channel field.';
                 }
                 field("Posting No. Series"; Rec."Posting No. Series")
                 {
@@ -414,13 +430,18 @@ page 50041 "GAN Approval Order"
                     ShortCutKey = 'F9';
 
                     trigger OnAction()
+                    var
+                        PurchHeader: Record "Purchase Header";
                     begin
+                        PurchHeader.Copy(Rec);
                         CheckQtyToReceive();
 
                         Post(CODEUNIT::"Purch.-Post (Yes/No)");
 
-                        Rec."GAN Approval Pending" := false;
-                        Rec.MODIFY;
+                        if PurchHeader.FindFirst() then begin
+                            PurchHeader."GAN Approval Pending" := false;
+                            PurchHeader.MODIFY;
+                        end;
                         CurrPage.CLOSE;
                     end;
                 }
@@ -611,3 +632,4 @@ page 50041 "GAN Approval Order"
             until PurchLine.Next() = 0;
     end;
 }
+ */

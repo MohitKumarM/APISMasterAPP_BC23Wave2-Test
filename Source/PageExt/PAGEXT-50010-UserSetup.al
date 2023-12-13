@@ -8,6 +8,10 @@ pageextension 50010 UsersSetup extends "User Setup"
             {
                 ApplicationArea = all;
             }
+            field("Allow Item Journal Posting"; Rec."Allow Item Journal Posting")
+            {
+                ApplicationArea = all;
+            }
             field("Allow Customer Approval"; Rec."Allow Customer Approval")
             {
                 ApplicationArea = All;
@@ -47,6 +51,14 @@ pageextension 50010 UsersSetup extends "User Setup"
                 ApplicationArea = all;
             }
             field("Allow Send Back Deal"; Rec."Allow Send Back Deal")
+            {
+                ApplicationArea = all;
+            }
+            field("Allow Item Approval"; Rec."Allow Item Approval")
+            {
+                ApplicationArea = all;
+            }
+            field("Flora Visibilty"; Rec."Flora Visibilty")
             {
                 ApplicationArea = all;
             }

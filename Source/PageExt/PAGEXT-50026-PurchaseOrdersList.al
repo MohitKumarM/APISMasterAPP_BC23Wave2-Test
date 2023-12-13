@@ -85,7 +85,6 @@ pageextension 50026 PurchaseOrders extends "Purchase Order List"
                     Error('');
             end;
         }
-
     }
 
     trigger OnOpenPage()

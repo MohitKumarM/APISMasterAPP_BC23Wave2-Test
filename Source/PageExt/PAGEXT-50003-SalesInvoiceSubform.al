@@ -53,7 +53,6 @@ pageextension 50003 SalesInvoiceSubform extends "Sales Invoice Subform"
                             Message('SKIP TCS feature is Enabled');
                         end;
                 end;
-
             }
         }
     }

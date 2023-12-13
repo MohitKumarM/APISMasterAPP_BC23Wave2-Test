@@ -20,27 +20,13 @@ page 50057 "Prod. Orders Material Request"
                 {
                     Lookup = false;
                 }
-                field("Source No."; Rec."Source No.")
-                {
-                }
-                field(Description; Rec.Description)
-                {
-                }
-                field("Batch No."; Rec."Batch No.")
-                {
-                }
-                field("Customer Code"; Rec."Customer Code")
-                {
-                }
-                field("Customer Name"; Rec."Customer Name")
-                {
-                }
-                field("Production Type"; Rec."Production Type")
-                {
-                }
-                field(Quantity; Rec.Quantity)
-                {
-                }
+                field("Source No."; Rec."Source No.") { }
+                field(Description; Rec.Description) { }
+                field("Batch No."; Rec."Batch No.") { }
+                field("Customer Code"; Rec."Customer Code") { }
+                field("Customer Name"; Rec."Customer Name") { }
+                field("Production Type"; Rec."Production Type") { }
+                field(Quantity; Rec.Quantity) { }
                 field("Shortcut Dimension 1 Code"; Rec."Shortcut Dimension 1 Code")
                 {
                     Visible = false;
@@ -53,21 +39,11 @@ page 50057 "Prod. Orders Material Request"
                 {
                     Visible = false;
                 }
-                field(Status; Rec.Status)
-                {
-                }
-                field(Moisture; Rec.Moisture)
-                {
-                }
-                field(Color; Rec.Color)
-                {
-                }
-                field(FG; Rec.FG)
-                {
-                }
-                field(HMF; Rec.HMF)
-                {
-                }
+                field(Status; Rec.Status) { }
+                field(Moisture; Rec.Moisture) { }
+                field(Color; Rec.Color) { }
+                field(FG; Rec.FG) { }
+                field(HMF; Rec.HMF) { }
             }
         }
     }
@@ -142,9 +118,7 @@ page 50057 "Prod. Orders Material Request"
                         Rec.ShowDocDim;
                     end;
                 }
-                separator(Seprator1)
-                {
-                }
+                separator(Seprator1) { }
                 action(Statistics)
                 {
                     Caption = 'Statistics';
@@ -286,7 +260,7 @@ page 50057 "Prod. Orders Material Request"
                     Caption = 'Components';
                     Image = Components;
                     Promoted = true;
-                    PromotedCategory = New;
+                    PromotedCategory = Process;
                     PromotedIsBig = true;
 
                     trigger OnAction()
@@ -304,7 +278,7 @@ page 50057 "Prod. Orders Material Request"
                     Caption = 'Send for Material Issue';
                     Image = SendTo;
                     Promoted = true;
-                    PromotedCategory = New;
+                    PromotedCategory = Process;
                     PromotedIsBig = true;
                     trigger OnAction()
                     begin
@@ -359,10 +333,13 @@ page 50057 "Prod. Orders Material Request"
                                         recBatchProcessLine."Lot No." := recLotTracking."Lot No.";
                                         recBatchProcessLine."Packing Qauntity" := recLotTracking."Qty. In Packs";
                                         recBatchProcessLine."Plan Weight" := recLotTracking.Quantity;
-                                        recBatchProcessLine."Packing Type" := recLotTracking."Packing Type";
+                                        // recBatchProcessLine."Packing Type" := recLotTracking."Packing Type";
+                                        recBatchProcessLine.Tin := recLotTracking.Tin;
+                                        recBatchProcessLine.Drum := recLotTracking.Drum;
+                                        recBatchProcessLine.Can := recLotTracking.Can;
+                                        recBatchProcessLine.Bucket := recLotTracking.Bucket;
                                         recBatchProcessLine."Qty. Per Pack" := recLotTracking."Average Qty. In Pack";
                                         recBatchProcessLine.INSERT;
-
                                     UNTIL recLotTracking.NEXT = 0;
 
                                 recReservationEntry.RESET;
@@ -387,7 +364,6 @@ page 50057 "Prod. Orders Material Request"
                                         recBatchProcessLine."Qty. Per Pack" := recReservationEntry."Qty. Per Pack";
                                         recBatchProcessLine.INSERT;
                                     UNTIL recReservationEntry.NEXT = 0;
-
                             UNTIL recProdOrderComponent.NEXT = 0;
                         END;
 
@@ -399,7 +375,6 @@ page 50057 "Prod. Orders Material Request"
 
                         MESSAGE('The material issue request is successfully submitted.');
                         CurrPage.UPDATE;
-
                     end;
                 }
                 action("Generate Bar Codes")
@@ -407,6 +382,7 @@ page 50057 "Prod. Orders Material Request"
                     Image = GetEntries;
                     Promoted = true;
                     PromotedCategory = Process;
+                    Visible = false;
 
                     trigger OnAction()
                     begin
@@ -422,6 +398,7 @@ page 50057 "Prod. Orders Material Request"
                     Image = Print;
                     Promoted = true;
                     PromotedCategory = "Report";
+                    Visible = false;
 
                     trigger OnAction()
                     var
@@ -515,6 +492,4 @@ page 50057 "Prod. Orders Material Request"
         recPurchaseSetup: Record "Purchases & Payables Setup";
         recProdOrder: Record "Production Order";
         recLotTracking: Record "Tran. Lot Tracking";
-        recProdOrderLine: Record "Prod. Order Line";
 }
-

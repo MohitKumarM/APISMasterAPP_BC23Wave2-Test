@@ -22,11 +22,11 @@ tableextension 50035 EntrySummary extends "Entry Summary"
         {
             DataClassification = ToBeClassified;
         }
-        field(50026; "Can"; Decimal)
+        field(50025; "ILE No."; Integer)
         {
             DataClassification = ToBeClassified;
         }
-        field(50025; "ILE No."; Integer)
+        field(50026; "Can"; Decimal)
         {
             DataClassification = ToBeClassified;
         }
