@@ -207,6 +207,7 @@ page 50043 "Customer Card New"
                 field("FASSAI No."; Rec."FASSAI No.")
                 {
                     ApplicationArea = All;
+                    Caption = 'FSSAI No.';
                     ShowMandatory = true;
                 }
                 field("Assessee Code"; Rec."Assessee Code")
@@ -397,7 +398,7 @@ page 50043 "Customer Card New"
                 }
                 action("Bank Accounts")
                 {
-                    Visible = false;
+
                     ApplicationArea = Basic, Suite;
                     Caption = 'Bank Accounts';
                     Image = BankAccount;
@@ -1263,6 +1264,7 @@ page 50043 "Customer Card New"
                         Rec.TestField("GST Customer Type");
                         Rec.TestField("Phone No.");
                         rec.TestField("E-Mail");
+                        rec.TestField("Post Code");
 
                         if ApprovalsMgmt.CheckCustomerApprovalsWorkflowEnabled(Rec) then
                             ApprovalsMgmt.OnSendCustomerForApproval(Rec);
